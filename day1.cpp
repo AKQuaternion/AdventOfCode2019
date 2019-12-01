@@ -3,16 +3,12 @@
 //
 #include <fstream>
 #include <iostream>
-#include <numeric>
-using std::cout;
-using std::endl;
-using std::ifstream;
 
 void day1() {
   auto star1 = 0;
   auto star2 = 0;
 
-  ifstream ifile("../day1.txt");
+  std::ifstream ifile("../day1.txt");
   int fuel;
   while (ifile >> fuel) {
     star1 += fuel / 3 - 2;
@@ -20,8 +16,6 @@ void day1() {
       star2 += fuel;
   }
 
-  cout << "Day 1 star 1 = " << star1 << "\n";
-  cout << "Day 1 star 2 = " << star2 << "\n";
+  std::cout << "Day 1 star 1 = " << star1 << "\n";
+  std::cout << "Day 1 star 2 = " << star2 << "\n";
 }
-// Day 1 star 1 = 3372756
-// Day 1 star 2 = 5056279
