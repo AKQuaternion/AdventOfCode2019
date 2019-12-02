@@ -25,7 +25,7 @@ int runIntcodeProgram(std::vector<int> program, int noun, int verb) {
 }
 
 void day2() {
-  std::ifstream ifile("../input.txt");
+  std::ifstream ifile("../day2.txt");
   std::vector<int> originalProgram;
   while (ifile) {
     char c;

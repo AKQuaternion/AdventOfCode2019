@@ -10,7 +10,7 @@
 #include "Intcode.hpp"
 
 void day2alt() {
-  std::ifstream ifile("../input.txt");
+  std::ifstream ifile("../day2.txt");
   Intcode program(ifile);
   auto star1 = program.run(12, 2);
 
