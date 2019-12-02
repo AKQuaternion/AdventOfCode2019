@@ -49,3 +49,6 @@ void daynnn() {
   cout << "Day nnn star 1 = " << star1 << "\n";
   cout << "Day nnn star 2 = " << star2 << "\n";
 }
+
+// day 1 calculate fuel required
+// day 2 run IntCode program
