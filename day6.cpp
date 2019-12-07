@@ -13,8 +13,8 @@ public:
   Graph(std::istream &ifile) {
     std::string line;
     while (getline(ifile, line)) {
-      std::string from, to;
       std::istringstream iline(line);
+      std::string from, to;
       getline(iline, from, ')');
       getline(iline, to);
       _edges[from].push_back(to);
