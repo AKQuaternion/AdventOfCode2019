@@ -56,3 +56,6 @@ void daynnn() {
 // day 1 calculate fuel required
 // day 2 run IntCode program
 // day 3 wires on a grid U D L R
+// day 4 digit passwords
+// day 5 more IntCode
+// day 6 orbits tree traversal

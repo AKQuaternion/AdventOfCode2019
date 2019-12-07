@@ -40,19 +40,20 @@ using std::tie;
 using std::tuple;
 using std::vector;
 
-auto star1 = 0;
-
 map<string, vector<string>> edges;
-map<string, int> ins;
+map<string, int> visited;
 
 int traverse(string root, int depth) {
+  visited[root] = depth;
   int sum = depth;
   for (auto i : edges[root])
-    sum += traverse(i, depth + 1);
+    if (visited.count(i) == 0)
+      sum += traverse(i, depth + 1);
   return sum;
 }
 
 void day6() {
+  auto star1 = 0;
   auto star2 = 0;
   ifstream ifile("../day6.txt");
 
@@ -62,31 +63,15 @@ void day6() {
     istringstream iline(line);
     getline(iline, from, ')');
     getline(iline, to);
-    //    cout << from << " " << to << endl;
     edges[from].push_back(to);
-    ins[from];
-    ins[to]++;
+    edges[to].push_back(from);
   }
-  for (auto [d, count] : ins)
-    if (count == 0)
-      cout << d << endl;
 
   star1 = traverse("COM", 0);
+  visited.clear();
+
+  traverse("YOU", 0);
+  star2 = visited["SAN"] - 2;
   cout << "Day 6 star 1 = " << star1 << "\n";
   cout << "Day 6 star 2 = " << star2 << "\n";
 }
-
-// day 1 calculate fuel required
-// day 2 run IntCode program
-// day 3 wires on a grid U D L R
-// COM)B
-// B)C
-// C)D
-// D)E
-// E)F
-// B)G
-// G)H
-// D)I
-// E)J
-// J)K
-// K)L

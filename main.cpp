@@ -32,7 +32,8 @@ int main() {
   //  day3();
   //  day4();
   //  day5();
-  day6();
+  //  day6();
+  day7();
   return 0;
 }
 // Day 1 star 1 = 3372756
