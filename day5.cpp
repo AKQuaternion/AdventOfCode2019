@@ -41,16 +41,13 @@ using std::tuple;
 using std::vector;
 
 void day5() {
-  auto star1 = 0;
-  auto star2 = 0;
   ifstream ifile("../day5.txt");
   Intcode i(ifile);
-  star1 = i.run({1}).back();
-  star2 = i.run({5}).back();
+  auto star1 = 0;
+  while (star1 == 0)
+    star1 = i.run({1}).back();
+  i.reset();
+  auto star2 = i.run({5}).back();
   cout << "Day 5 star 1 = " << star1 << "\n";
   cout << "Day 5 star 2 = " << star2 << "\n";
 }
-
-// day 1 calculate fuel required
-// day 2 run IntCode program
-// day 3 wires on a grid U D L R

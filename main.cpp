@@ -25,13 +25,20 @@ void day23();
 void day24();
 void day25();
 
+// day 1 calculate fuel required
+// day 2 run Intcode program
+// day 3 wires on a grid U D L R
+// day 4 digit passwords
+// day 5 more Intcode
+// day 6 orbits tree traversal
+// day 7 chained Intcode
 int main() {
-  //  day1();
-  //  day2();
-  //  day2alt();
-  //  day3();
-  //  day4();
-  //  day5();
+  day1();
+  day2();
+  day2alt();
+  day3();
+  day4();
+  day5();
   day6();
   day7();
   return 0;

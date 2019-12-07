@@ -14,18 +14,18 @@ using std::ifstream;
 using std::vector;
 
 void day7() {
-  long long star1 = 0;
-  long long star2 = 0;
+  int star1 = 0;
+  int star2 = 0;
   ifstream ifile("../day7.txt");
   Intcode program(ifile);
 
-  vector<long long> phase{0, 1, 2, 3, 4};
+  vector<int> phase{0, 1, 2, 3, 4};
   do {
     vector<Intcode> amps(5, program);
-    vector<vector<long long>> inputs;
+    vector<vector<int>> inputs;
     for (auto p : phase)
       inputs.push_back({p});
-    vector<long long> out{0};
+    vector<int> out{0};
     for (int i = 0; i < 5; ++i) {
       inputs[i].push_back(out[0]);
       out = amps[i].run(inputs[i]);
@@ -37,10 +37,10 @@ void day7() {
   phase = {5, 6, 7, 8, 9};
   do {
     vector<Intcode> amps(5, program);
-    vector<vector<long long>> inputs;
+    vector<vector<int>> inputs;
     for (auto p : phase)
       inputs.push_back({p});
-    vector<long long> out{0};
+    vector<int> out{0};
     while (out.size() != 2) { //!!! hack if Intcode halts it returns two output
       auto last = out[0];
       for (int i = 0; i < 5; ++i) {

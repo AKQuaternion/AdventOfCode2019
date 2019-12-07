@@ -8,83 +8,73 @@
 #include <sstream>
 #include <utility>
 
-Intcode::Intcode(std::vector<int> p) : _p(std::move(p)) {}
-
-Intcode::Intcode(const std::string &s) {
-  std::istringstream in{s};
+Intcode::Intcode(std::istream &in) {
   readProgram(in);
+  reset();
 }
-
-Intcode::Intcode(std::istream &in) { readProgram(in); }
 
 int Intcode::run(int noun, int verb) {
-  std::vector<int> p{_p};
-  ip = 0;
-  p[1] = noun;
-  p[2] = verb;
-  doRun(p, {});
-  return p[0];
+  reset();
+  _p[1] = noun;
+  _p[2] = verb;
+  run({});
+  return _p[0];
 }
 
-std::vector<long long> Intcode::run(std::vector<long long> const &input) {
-  return doRun(_p, input);
-}
-
-std::vector<long long> Intcode::doRun(std::vector<int> &p,
-                                      std::vector<long long> const &input) {
+std::vector<int> Intcode::run(std::vector<int> const &input) {
   auto inIndex = 0;
   int output;
-  while (ip < p.size()) {
-    auto instruction = p[ip];
+  while (_ip < _p.size()) {
+    auto instruction = _p[_ip];
     auto op = instruction % 100;
     if (op == 99)
       break;
     instruction /= 100;
     int dummy = 0;
-    auto &p1 = (ip + 1) < p.size() ? p[ip + 1] : dummy;
-    auto &p2 = (ip + 2) < p.size() ? p[ip + 2] : dummy;
-    auto &p3 = (ip + 3) < p.size() ? p[ip + 3] : dummy;
+    auto &p1 = (_ip + 1) < _p.size() ? _p[_ip + 1] : dummy;
+    auto &p2 = (_ip + 2) < _p.size() ? _p[_ip + 2] : dummy;
+    auto &p3 = (_ip + 3) < _p.size() ? _p[_ip + 3] : dummy;
 
-    auto &l1 = instruction % 10 == 0 ? p[p1] : p1;
+    auto &l1 = instruction % 10 == 0 ? _p[p1] : p1;
     instruction /= 10;
-    auto &l2 = instruction % 10 == 0 ? p[p2] : p2;
+    auto &l2 = instruction % 10 == 0 ? _p[p2] : p2;
     instruction /= 10;
-    auto &l3 = instruction % 10 == 0 ? p[p3] : p3;
+    auto &l3 = instruction % 10 == 0 ? _p[p3] : p3;
     if (op == 1) { // add
       l3 = l1 + l2;
-      ip += 4;
+      _ip += 4;
     } else if (op == 2) { // multiply
       l3 = l1 * l2;
-      ip += 4;
+      _ip += 4;
     } else if (op == 3) { // input
       l1 = input[inIndex++];
-      ip += 2;
+      _ip += 2;
     } else if (op == 4) { // output
-      ip += 2;
+      _ip += 2;
       output = l1;
       return {l1};
     } else if (op == 5) { // jump-if-true
       if (l1 != 0)
-        ip = l2;
+        _ip = l2;
       else
-        ip += 3;
+        _ip += 3;
     } else if (op == 6) { // jump-if-false
       if (l1 == 0)
-        ip = l2;
+        _ip = l2;
       else
-        ip += 3;
+        _ip += 3;
     } else if (op == 7) { // less than
       if (l1 < l2)
         l3 = 1;
       else
         l3 = 0;
-      ip += 4;
+      _ip += 4;
     } else if (op == 8) { // equals
       if (l1 == l2)
         l3 = 1;
       else
         l3 = 0;
-      ip += 4;
+      _ip += 4;
     } else {
       throw(
           std::runtime_error("Unimplemented Intcode opcode in Intcode::run()"));
@@ -94,11 +84,17 @@ std::vector<long long> Intcode::doRun(std::vector<int> &p,
 }
 
 void Intcode::readProgram(std::istream &in) {
-  _p.clear();
+  _originalProgram.clear();
   while (in) {
     char c;
     int i;
     in >> i >> c;
-    _p.push_back(i);
+    _originalProgram.push_back(i);
   }
-} // not 1679302
+}
+
+void Intcode::reset() {
+  _ip = 0;
+  _p = _originalProgram;
+}
+// not 1679302
