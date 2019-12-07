@@ -6,14 +6,11 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <vector>
 
 using std::cout;
 using std::endl;
-using std::forward_as_tuple;
 using std::ifstream;
-using std::map;
 using std::vector;
 
 void day7() {
