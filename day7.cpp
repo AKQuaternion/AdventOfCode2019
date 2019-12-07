@@ -13,45 +13,28 @@ using std::endl;
 using std::ifstream;
 using std::vector;
 
+int runPhases(const Intcode &program, vector<int> phase, bool feedback) {
+  int star = 0;
+  do {
+    vector<Intcode> amps(5, program);
+    for (int i = 0; i < 5; ++i)
+      amps[i].enqueueInput({phase[i]});
+    int previousOutput = 0;
+    Intcode::State state;
+    do
+      for (int i = 0; i < 5; ++i)
+        std::tie(state, previousOutput) = amps[i].run({previousOutput});
+    while (feedback && state != Intcode::HALT);
+    star = std::max(star, previousOutput);
+  } while (std::next_permutation(phase.begin(), phase.end()));
+  return star;
+}
+
 void day7() {
-  int star1 = 0;
-  int star2 = 0;
   ifstream ifile("../day7.txt");
   Intcode program(ifile);
-
-  vector<int> phase{0, 1, 2, 3, 4};
-  do {
-    vector<Intcode> amps(5, program);
-    vector<vector<int>> inputs;
-    for (auto p : phase)
-      inputs.push_back({p});
-    vector<int> out{0};
-    for (int i = 0; i < 5; ++i) {
-      inputs[i].push_back(out[0]);
-      out = amps[i].run(inputs[i]);
-      inputs[i].clear();
-    }
-    star1 = std::max(star1, out[0]);
-  } while (std::next_permutation(phase.begin(), phase.end()));
-
-  phase = {5, 6, 7, 8, 9};
-  do {
-    vector<Intcode> amps(5, program);
-    vector<vector<int>> inputs;
-    for (auto p : phase)
-      inputs.push_back({p});
-    vector<int> out{0};
-    while (out.size() != 2) { //!!! hack if Intcode halts it returns two output
-      auto last = out[0];
-      for (int i = 0; i < 5; ++i) {
-        inputs[i].push_back(out[0]);
-        out = amps[i].run(inputs[i]);
-        inputs[i].clear();
-      }
-      star2 = std::max(star2, last);
-    }
-  } while (std::next_permutation(phase.begin(), phase.end()));
-
+  auto star1 = runPhases(program, {0, 1, 2, 3, 4}, false);
+  auto star2 = runPhases(program, {5, 6, 7, 8, 9}, true);
   cout << "Day 7 star 1 = " << star1 << "\n";
   cout << "Day 7 star 2 = " << star2 << "\n";
 }

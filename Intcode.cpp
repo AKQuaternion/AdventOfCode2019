@@ -8,27 +8,23 @@
 #include <sstream>
 #include <utility>
 
-Intcode::Intcode(std::istream &in) {
-  readProgram(in);
-  reset();
-}
+Intcode::Intcode(std::istream &in) { readProgram(in); }
 
 int Intcode::run(int noun, int verb) {
   reset();
   _p[1] = noun;
   _p[2] = verb;
-  run({});
+  run();
   return _p[0];
 }
 
-std::vector<int> Intcode::run(std::vector<int> const &input) {
-  auto inIndex = 0;
-  int output;
+std::pair<Intcode::State, int> Intcode::run(std::vector<int> const &input) {
+  enqueueInput(input);
   while (_ip < _p.size()) {
     auto instruction = _p[_ip];
     auto op = instruction % 100;
     if (op == 99)
-      break;
+      return {HALT, _lastOutput};
     instruction /= 100;
     int dummy = 0;
     auto &p1 = (_ip + 1) < _p.size() ? _p[_ip + 1] : dummy;
@@ -47,12 +43,15 @@ std::vector<int> Intcode::run(std::vector<int> const &input) {
       l3 = l1 * l2;
       _ip += 4;
     } else if (op == 3) { // input
-      l1 = input[inIndex++];
+      if (input.empty())
+        return {INPUT, _lastOutput};
+      l1 = _input.front();
+      _input.pop();
       _ip += 2;
     } else if (op == 4) { // output
       _ip += 2;
-      output = l1;
-      return {l1};
+      _lastOutput = l1;
+      return {OUTPUT, l1};
     } else if (op == 5) { // jump-if-true
       if (l1 != 0)
         _ip = l2;
@@ -80,7 +79,7 @@ std::vector<int> Intcode::run(std::vector<int> const &input) {
           std::runtime_error("Unimplemented Intcode opcode in Intcode::run()"));
     }
   }
-  return {output, output};
+  return {HALT, _lastOutput};
 }
 
 void Intcode::readProgram(std::istream &in) {
@@ -91,10 +90,18 @@ void Intcode::readProgram(std::istream &in) {
     in >> i >> c;
     _originalProgram.push_back(i);
   }
+  reset();
 }
 
 void Intcode::reset() {
   _ip = 0;
   _p = _originalProgram;
+  _input = {};
 }
-// not 1679302
+
+void Intcode::enqueueInput(const std::vector<int> &input) {
+  for (auto i : input)
+    _input.push(i);
+}
+
+int Intcode::getLastOutput() const { return _lastOutput; }

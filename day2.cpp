@@ -1,9 +1,6 @@
 //
 // Created by Chris Hartman on 12/1/19.
 //
-//
-// Created by Chris Hartman on 12/1/19.
-//
 #include <fstream>
 #include <iostream>
 
