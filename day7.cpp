@@ -4,71 +4,59 @@
 #include "Intcode.hpp"
 
 #include <algorithm>
-#include <cmath>
-#include <cstdlib>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <map>
-#include <numeric>
-#include <queue>
-#include <set>
-#include <sstream>
-#include <string>
-#include <tuple>
-#include <utility>
 #include <vector>
-using std::abs;
-using std::ceil;
+
 using std::cout;
 using std::endl;
 using std::forward_as_tuple;
 using std::ifstream;
-using std::istream;
-using std::istringstream;
 using std::map;
-using std::max;
-using std::max_element;
-using std::min;
-using std::pair;
-using std::queue;
-using std::set;
-using std::sqrt;
-using std::string;
-using std::swap;
-using std::tie;
-using std::tuple;
 using std::vector;
 
 void day7() {
-  auto star1 = 0;
-  auto star2 = 0;
+  long long star1 = 0;
+  long long star2 = 0;
   ifstream ifile("../day7.txt");
-  Intcode i(ifile);
-  //  string line;
-  //  while (getline(ifile, line)) {
-  //    string _s;
-  //    istringstream iline(line);
-  //    iline >> _s;
-  //  }
+  Intcode program(ifile);
 
-  vector<int> phase{0, 1, 2, 3, 4};
+  vector<long long> phase{0, 1, 2, 3, 4};
   do {
-    for (auto i : phase)
-      cout << i;
-    cout << endl;
+    vector<Intcode> amps(5, program);
+    vector<vector<long long>> inputs;
+    for (auto p : phase)
+      inputs.push_back({p});
+    vector<long long> out{0};
+    for (int i = 0; i < 5; ++i) {
+      inputs[i].push_back(out[0]);
+      out = amps[i].run(inputs[i]);
+      inputs[i].clear();
+    }
+    star1 = std::max(star1, out[0]);
+  } while (std::next_permutation(phase.begin(), phase.end()));
 
-    Intcode a{i}, b{i}, c{i}, d{i}, e{i};
-
-    vector<int> out;
-    out = a.run({phase[0], 0});
-    out = b.run({phase[1], out[0]});
-    out = c.run({phase[2], out[0]});
-    out = d.run({phase[3], out[0]});
-    out = e.run({phase[4], out[0]});
-    star1 = max(star1, out[0]);
+  phase = {5, 6, 7, 8, 9};
+  do {
+    vector<Intcode> amps(5, program);
+    vector<vector<long long>> inputs;
+    for (auto p : phase)
+      inputs.push_back({p});
+    vector<long long> out{0};
+    while (out.size() != 2) { //!!! hack if Intcode halts it returns two output
+      auto last = out[0];
+      for (int i = 0; i < 5; ++i) {
+        inputs[i].push_back(out[0]);
+        out = amps[i].run(inputs[i]);
+        inputs[i].clear();
+      }
+      star2 = std::max(star2, last);
+    }
   } while (std::next_permutation(phase.begin(), phase.end()));
 
   cout << "Day 7 star 1 = " << star1 << "\n";
   cout << "Day 7 star 2 = " << star2 << "\n";
 }
+// Day 7 star 1 = 273814
+// Day 7 star 2 = 34579864

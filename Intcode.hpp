@@ -17,12 +17,14 @@ public:
   explicit Intcode(const std::string &s);
   explicit Intcode(std::vector<int> p);
   explicit Intcode(std::istream &in);
-  std::vector<int> run(std::vector<int> const &input);
+  std::vector<long long> run(std::vector<long long> const &input);
   int run(int noun, int verb);
 
 private:
-  std::vector<int> doRun(std::vector<int> &p, std::vector<int> const &input);
+  std::vector<long long> doRun(std::vector<int> &p,
+                               std::vector<long long> const &input);
   std::vector<int> _p;
+  int ip = 0;
 };
 
 #endif // ADVENTOFCODE2019_INTCODE_HPP

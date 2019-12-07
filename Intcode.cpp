@@ -19,22 +19,21 @@ Intcode::Intcode(std::istream &in) { readProgram(in); }
 
 int Intcode::run(int noun, int verb) {
   std::vector<int> p{_p};
+  ip = 0;
   p[1] = noun;
   p[2] = verb;
   doRun(p, {});
   return p[0];
 }
 
-std::vector<int> Intcode::run(std::vector<int> const &input) {
-  std::vector<int> p{_p};
-  return doRun(p, input);
+std::vector<long long> Intcode::run(std::vector<long long> const &input) {
+  return doRun(_p, input);
 }
 
-std::vector<int> Intcode::doRun(std::vector<int> &p,
-                                std::vector<int> const &input) {
+std::vector<long long> Intcode::doRun(std::vector<int> &p,
+                                      std::vector<long long> const &input) {
   auto inIndex = 0;
-  auto ip = 0;
-  std::vector<int> output;
+  int output;
   while (ip < p.size()) {
     auto instruction = p[ip];
     auto op = instruction % 100;
@@ -62,7 +61,8 @@ std::vector<int> Intcode::doRun(std::vector<int> &p,
       ip += 2;
     } else if (op == 4) { // output
       ip += 2;
-      output.push_back(l1);
+      output = l1;
+      return {l1};
     } else if (op == 5) { // jump-if-true
       if (l1 != 0)
         ip = l2;
@@ -90,7 +90,7 @@ std::vector<int> Intcode::doRun(std::vector<int> &p,
           std::runtime_error("Unimplemented Intcode opcode in Intcode::run()"));
     }
   }
-  return output;
+  return {output, output};
 }
 
 void Intcode::readProgram(std::istream &in) {

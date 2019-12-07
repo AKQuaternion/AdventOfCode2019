@@ -32,7 +32,7 @@ int main() {
   //  day3();
   //  day4();
   //  day5();
-  //  day6();
+  day6();
   day7();
   return 0;
 }
@@ -46,3 +46,7 @@ int main() {
 // Day 4 star 2 = 358
 // Day 5 star 1 = 16348437
 // Day 5 star 2 = 6959377
+// Day 6 star 1 = 268504
+// Day 6 star 2 = 409
+// Day 7 star 1 = 273814
+// Day 7 star 2 = 34579864
