@@ -12,10 +12,10 @@ void day8() {
   auto minZeroes = layer.size();
   while (ifile.read(layer.data(), 6 * 25)) {
     pix.push_back(layer);
-    if (auto z = count(layer.begin(), layer.end(), '0'); z < minZeroes) {
+    if (auto z = std::count(layer.begin(), layer.end(), '0'); z < minZeroes) {
       minZeroes = z;
-      star1 = count(layer.begin(), layer.end(), '1') *
-              count(layer.begin(), layer.end(), '2');
+      star1 = std::count(layer.begin(), layer.end(), '1') *
+              std::count(layer.begin(), layer.end(), '2');
     }
   }
 
