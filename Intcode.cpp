@@ -18,67 +18,54 @@ int Intcode::run(int noun, int verb) {
   return _p[0];
 }
 
+int &Intcode::par(int n) {
+  const static int modeDiv[] = {1, 100, 1000, 10000};
+  return ((_p[_ip] / modeDiv[n]) % 10) ? _p[_ip + n] : _p[_p[_ip + n]];
+}
+
 std::pair<Intcode::State, int> Intcode::run(std::vector<int> const &input) {
   enqueueInput(input);
-  while (_ip < _p.size()) {
-    auto instruction = _p[_ip];
-    auto op = instruction % 100;
-    if (op == 99)
-      return {HALT, _lastOutput};
-    instruction /= 100;
-    int dummy = 0;
-    auto &p1 = (_ip + 1) < _p.size() ? _p[_ip + 1] : dummy;
-    auto &p2 = (_ip + 2) < _p.size() ? _p[_ip + 2] : dummy;
-    auto &p3 = (_ip + 3) < _p.size() ? _p[_ip + 3] : dummy;
-
-    auto &l1 = instruction % 10 == 0 ? _p[p1] : p1;
-    instruction /= 10;
-    auto &l2 = instruction % 10 == 0 ? _p[p2] : p2;
-    instruction /= 10;
-    auto &l3 = instruction % 10 == 0 ? _p[p3] : p3;
-    if (op == 1) { // add
-      l3 = l1 + l2;
+  while (_ip < _p.size())
+    switch (_p[_ip] % 100) {
+    case 1: // add
+      par(3) = par(1) + par(2);
       _ip += 4;
-    } else if (op == 2) { // multiply
-      l3 = l1 * l2;
+      break;
+    case 2: // multiply
+      par(3) = par(1) * par(2);
       _ip += 4;
-    } else if (op == 3) { // input
+      break;
+    case 3: // input
       if (input.empty())
         return {INPUT, _lastOutput};
-      l1 = _input.front();
+      par(1) = _input.front();
       _input.pop();
       _ip += 2;
-    } else if (op == 4) { // output
+      break;
+    case 4: // output
+      _lastOutput = par(1);
       _ip += 2;
-      _lastOutput = l1;
-      return {OUTPUT, l1};
-    } else if (op == 5) { // jump-if-true
-      if (l1 != 0)
-        _ip = l2;
-      else
-        _ip += 3;
-    } else if (op == 6) { // jump-if-false
-      if (l1 == 0)
-        _ip = l2;
-      else
-        _ip += 3;
-    } else if (op == 7) { // less than
-      if (l1 < l2)
-        l3 = 1;
-      else
-        l3 = 0;
+      return {OUTPUT, _lastOutput};
+    case 5: // jump-if-true
+      _ip = (par(1) != 0) ? par(2) : _ip + 3;
+      break;
+    case 6: // jump-if-false
+      _ip = (par(1) == 0) ? par(2) : _ip + 3;
+      break;
+    case 7: // less than
+      par(3) = (par(1) < par(2)) ? 1 : 0;
       _ip += 4;
-    } else if (op == 8) { // equals
-      if (l1 == l2)
-        l3 = 1;
-      else
-        l3 = 0;
+      break;
+    case 8: // equals
+      par(3) = (par(1) == par(2)) ? 1 : 0;
       _ip += 4;
-    } else {
+      break;
+    case 99:
+      return {HALT, _lastOutput};
+    default:
       throw(
           std::runtime_error("Unimplemented Intcode opcode in Intcode::run()"));
     }
-  }
   return {HALT, _lastOutput};
 }
 
@@ -104,4 +91,65 @@ void Intcode::enqueueInput(const std::vector<int> &input) {
     _input.push(i);
 }
 
-int Intcode::getLastOutput() const { return _lastOutput; }
+#include <iostream>
+void Intcode::compile() const {
+  using std::cout;
+  using std::to_string;
+  int ip = 0;
+
+  auto par = [&](int n) -> std::string {
+    const static int modeDiv[] = {1, 100, 1000, 10000};
+    return ((_p[ip] / modeDiv[n]) % 10) ? "p" + to_string(ip + n)
+                                        : "p[" + to_string(_p[ip + n]) + "]";
+    //    : "p[p" + to_string(ip + n) + "=" + to_string(_p[ip + n]) + "] ";
+  };
+  for (int i = 0; i < _p.size(); ++i)
+    cout << "int p" << i << " = " << _p[i] << ";\n";
+  while (ip < _p.size()) {
+    cout << "label" << to_string(ip) << ":\n\t";
+    switch (_p[ip] % 100) {
+    case 1: // add
+      cout << par(3) << " = " << par(1) << " + " << par(2) << ";\n";
+      ip += 4;
+      break;
+    case 2: // multiply
+      cout << par(3) << " = " << par(1) << " * " << par(2) << ";\n";
+      ip += 4;
+      break;
+    case 3: // input
+      cout << par(1) << " = input; //INPUT\n";
+      ip += 2;
+      break;
+    case 4: // output
+      cout << "return " << par(1) << "; //OUTPUT\n";
+      ip += 2;
+      break;
+    case 5: // jump-if-true
+      cout << "if(" << par(1) << " != 0) goto label" << par(2) << ";\n";
+      ip += 3;
+      break;
+    case 6: // jump-if-false
+      cout << "if(" << par(1) << " == 0) goto label" << par(2) << ";\n";
+      ip += 3;
+      break;
+    case 7: // less than
+      cout << par(3) << " = (" << par(1) << " < " << par(2) << ") ? 1 : 0;\n";
+      ip += 4;
+      break;
+    case 8: // equals
+      cout << par(3) << " = (" << par(1) << " == " << par(2) << ") ? 1 : 0;\n";
+      ip += 4;
+      break;
+    case 99:
+      cout << "return; //HALT\n";
+      ip += 1;
+      break;
+    default:
+      cout << "// p" << ip << " = " << _p[ip] << ";\n";
+      ip += 1;
+      //      throw(
+      //          std::runtime_error("Unimplemented Intcode opcode in
+      //          Intcode::compile()"));
+    }
+  }
+}

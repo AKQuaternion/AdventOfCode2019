@@ -21,9 +21,10 @@ public:
   int run(int noun, int verb);
   void reset();
   void enqueueInput(const std::vector<int> &input);
-  [[nodiscard]] int getLastOutput() const;
+  void compile() const;
 
 private:
+  int &par(int n);
   std::vector<int> _originalProgram;
   std::vector<int> _p;
   std::queue<int> _input;
