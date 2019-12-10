@@ -40,10 +40,41 @@ using std::tie;
 using std::tuple;
 using std::vector;
 
+namespace {
+auto star1 = 0;
+auto star2 = 0;
+} // namespace
+
+bool fire(vector<string> &g, int bc, int br, int dx, int dy, int &count) {
+  int s = g.size() - 1;
+  for (int m = 1; m < g.size(); ++m)
+    if (bc + m * dx < 0 || bc + m * dx > s || br + m * dy < 0 ||
+        br + m * dy > s)
+      return false;
+    else {
+      if (g[br + m * dy][bc + m * dx] == '#') {
+        ++count;
+        //        cout << "Slope " << dy << "/" << dx << "\t" << bc + m * dx <<
+        //        " " << br + m * dy << " at count "
+        //             << count << endl;
+        //        g[br + m * dy][bc + m * dx] = 'O';
+        //        for (auto l : g) {
+        //          cout << l << endl;
+        //        }
+        //        cout << endl;
+        if (count == 200) {
+          star2 = (bc + m * dx) * 100 + br + m * dy;
+          //          exit(0);
+        }
+        g[br + m * dy][bc + m * dx] = ' ';
+        return true;
+      }
+    }
+  return false;
+}
+
 void day10() {
-  auto star1 = 0;
-  auto star2 = 0;
-  ifstream ifile("../day10.txt");
+  int br, bc;
   //  istringstream ifile(".#..#..###\n"
   //                      "####.###.#\n"
   //                      "....###.#.\n"
@@ -69,7 +100,28 @@ void day10() {
   //                      ".##.#..###\n"
   //                      "##...#..#.\n"
   //                      ".#....####");
-  //  Intcode i(ifile);
+
+  istringstream ifilet(".#..##.###...#######\n"
+                       "##.############..##.\n"
+                       ".#.######.########.#\n"
+                       ".###.#######.####.#.\n"
+                       "#####.##.#.##.###.##\n"
+                       "..#####..#.#########\n"
+                       "####################\n"
+                       "#.####....###.#.#.##\n"
+                       "##.#################\n"
+                       "#####.##.###..####..\n"
+                       "..######..##.#######\n"
+                       "####.##.####...##..#\n"
+                       ".#####..#.######.###\n"
+                       "##...#.##########...\n"
+                       "#.##########.#######\n"
+                       ".####.#.###.###.#.##\n"
+                       "....##.##.###..#####\n"
+                       ".#.#.###########.###\n"
+                       "#.#.#.#####.####.###\n"
+                       "###.##.####.##.#..##");
+  ifstream ifile("../day10.txt");
   string line;
   vector<string> grid;
   while (getline(ifile, line)) {
@@ -111,16 +163,64 @@ void day10() {
       int sum = 0;
       for (auto l : g) {
         sum += count(l.begin(), l.end(), '#');
-        cout << l << endl;
+        //        cout << l << endl;
       }
-      cout << endl;
-      //      if(sum>star1)
-      cout << col << " " << row << " has " << sum << endl;
+      //      cout << endl;
+      if (sum > star1) {
+        //        cout << col << " " << row << " has " << sum << endl;
+        br = row;
+        bc = col;
+      }
       star1 = max(star1, sum);
     }
+  int sum = 0;
+  for (auto l : grid) {
+    sum += count(l.begin(), l.end(), '#');
+    //        cout << l << endl;
+  }
+  cout << sum << " stars in grid.\n";
+
   cout << "Day 10 star 1 = " << star1 << "\n";
+  cout << " at " << bc << " " << br << endl;
+
+  auto g = grid;
+  g[br][bc] = 'o';
+
+  vector<pair<int, int>> slopes;
+  for (int dx = 1; dx < s; ++dx)
+    for (int dy = 1; dy < s; ++dy)
+      if (std::gcd(dx, dy) == 1)
+        slopes.push_back({dx, dy});
+
+  sort(slopes.begin(), slopes.end(), [](auto a, auto b) {
+    auto sa = double(a.second) / a.first;
+    auto sb = double(b.second) / b.first;
+    return sa < sb;
+  });
+
+  int count = 0;
+
+  for (int i = 0; i < 100; ++i) {
+    fire(g, bc, br, 0, -1, count);
+    for (auto [rise, run] : slopes)
+      fire(g, bc, br, run, -rise, count);
+    fire(g, bc, br, 1, 0, count);
+    std::reverse(slopes.begin(), slopes.end());
+    for (auto [rise, run] : slopes)
+      fire(g, bc, br, run, rise, count);
+    fire(g, bc, br, 0, 1, count);
+    std::reverse(slopes.begin(), slopes.end());
+    for (auto [rise, run] : slopes)
+      fire(g, bc, br, -run, rise, count);
+    fire(g, bc, br, -1, 0, count);
+    std::reverse(slopes.begin(), slopes.end());
+    for (auto [rise, run] : slopes)
+      fire(g, bc, br, -run, -rise, count);
+    std::reverse(slopes.begin(), slopes.end());
+  }
+
   cout << "Day 10 star 2 = " << star2 << "\n";
-} // not 325
+}
 
 // day 1 calculate fuel required
 // day 2 run IntCode program
