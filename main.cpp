@@ -32,15 +32,6 @@ void day25();
 // day 6 orbits tree traversal
 // day 7 chained Intcode
 
-#include "Intcode.hpp"
-#include <fstream>
-#include <sstream>
-void foo() {
-  //  std::istringstream code("3,9,8,9,10,9,4,9,99,-1,8");
-  std::ifstream code("../day5.txt");
-  Intcode icode(code);
-  icode.compile();
-}
 
 int main() {
   //  day1();
@@ -50,9 +41,9 @@ int main() {
   //  day5();
   //  day6();
   //  day7();
-  //  foo();
-  day8();
-  return 0;
+  //  day8();
+  //  day9();
+  day10();
 }
 // Day 1 star 1 = 3372756
 // Day 1 star 2 = 5056279
@@ -68,6 +59,16 @@ int main() {
 // Day 6 star 2 = 409
 // Day 7 star 1 = 273814
 // Day 7 star 2 = 34579864
+// Day 8 star 1 = 2440
+// Day 8 star 2 =
+//   * *     * * * *     * *         * *     * *
+// *     *         *   *     *         *   *     *
+// *     *       *     *               *   *
+// * * * *     *       *               *   *
+// *     *   *         *     *   *     *   *     *
+// *     *   * * * *     * *       * *       * *
+// Day 9 star 1 = 4288078517
+// Day 9 star 2 = 69256
 
 // Day 2 star 1 = 4138687
 // Day 2 star 2 = 6635
@@ -75,3 +76,5 @@ int main() {
 // Day 5 star 2 = 6959377
 // Day 7 star 1 = 273814
 // Day 7 star 2 = 34579864
+// Day 9 star 1 = 4288078517
+// Day 9 star 2 = 69256

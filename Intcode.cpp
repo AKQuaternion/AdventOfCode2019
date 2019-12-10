@@ -10,20 +10,31 @@
 
 Intcode::Intcode(std::istream &in) { readProgram(in); }
 
-int Intcode::run(int noun, int verb) {
+long long Intcode::run(int noun, int verb) {
   reset();
   _p[1] = noun;
   _p[2] = verb;
   run();
   return _p[0];
 }
-
-int &Intcode::par(int n) {
+#include <iostream>
+long long &Intcode::par(long long n) {
   const static int modeDiv[] = {1, 100, 1000, 10000};
-  return ((_p[_ip] / modeDiv[n]) % 10) ? _p[_ip + n] : _p[_p[_ip + n]];
+  auto mode = (_p[_ip] / modeDiv[n]) % 10;
+  switch (mode) {
+  case 0:
+    return _p[_p[_ip + n]]; // position
+  case 1:
+    return _p[_ip + n]; // immediate
+  case 2:
+    return _p[_rp + _p[_ip + n]]; // relative
+  default:
+    throw std::runtime_error("Unimplemented mode in Intcode::run()");
+  }
 }
 
-std::pair<Intcode::State, int> Intcode::run(std::vector<int> const &input) {
+std::pair<Intcode::State, long long>
+Intcode::run(std::vector<long long> const &input) {
   enqueueInput(input);
   while (_ip < _p.size())
     switch (_p[_ip] % 100) {
@@ -60,6 +71,17 @@ std::pair<Intcode::State, int> Intcode::run(std::vector<int> const &input) {
       par(3) = (par(1) == par(2)) ? 1 : 0;
       _ip += 4;
       break;
+    case 9: // adjust rp
+      _rp += par(1);
+      _ip += 2;
+      break;
+    case 50: // gosub
+      _p[_rp++] = _ip + 2;
+      _ip = par(1);
+      break;
+    case 51: // return
+      _ip = _p[--_rp];
+      break;
     case 99:
       return {HALT, _lastOutput};
     default:
@@ -71,65 +93,90 @@ std::pair<Intcode::State, int> Intcode::run(std::vector<int> const &input) {
 
 void Intcode::readProgram(std::istream &in) {
   _originalProgram.clear();
+  int loc = 0;
   while (in) {
     char c;
-    int i;
+    long long i;
     in >> i >> c;
-    _originalProgram.push_back(i);
+    _originalProgram[loc++] = i;
   }
   reset();
 }
 
 void Intcode::reset() {
   _ip = 0;
+  _rp = 0;
   _p = _originalProgram;
   _input = {};
 }
 
-void Intcode::enqueueInput(const std::vector<int> &input) {
+void Intcode::enqueueInput(const std::vector<long long> &input) {
   for (auto i : input)
     _input.push(i);
 }
 
 #include <iostream>
-void Intcode::compile() const {
+void Intcode::compile() {
   using std::cout;
   using std::to_string;
   int ip = 0;
-
+  auto plabel = [&](const std::string &n) {
+    return (n.size() < 3 ? "0" : "") + ((n.size() < 2 ? "0" : "") + n);
+  };
   auto par = [&](int n) -> std::string {
     const static int modeDiv[] = {1, 100, 1000, 10000};
-    return ((_p[ip] / modeDiv[n]) % 10) ? "p" + to_string(ip + n)
-                                        : "p[" + to_string(_p[ip + n]) + "]";
-    //    : "p[p" + to_string(ip + n) + "=" + to_string(_p[ip + n]) + "] ";
+    auto mode = (_p[ip] / modeDiv[n]) % 10;
+    switch (mode) {
+    case 0:
+      return "p[" + to_string(_p[ip + n]) + "]"; // position
+    case 1:
+      return to_string(_p[ip + n]); // immediate
+    case 2:
+      return "p[rp" +
+             (_p[ip + n] >= 0 ? "+" + to_string(_p[ip + n])
+                              : "-" + to_string(-_p[ip + n])) +
+             "]"; // relative
+    default:
+      throw std::runtime_error("Unimplemented mode in Intcode::run()");
+    }
   };
   for (int i = 0; i < _p.size(); ++i)
-    cout << "int p" << i << " = " << _p[i] << ";\n";
+    cout << "p[" << i << "] = " << _p[i] << ";\n";
   while (ip < _p.size()) {
-    cout << "label" << to_string(ip) << ":\n\t";
+    cout << "label" << plabel(std::to_string(ip)) << ":\t";
     switch (_p[ip] % 100) {
     case 1: // add
-      cout << par(3) << " = " << par(1) << " + " << par(2) << ";\n";
+      if (par(3) == par(1))
+        cout << par(3) << " += " << par(2) << ";\n";
+      else if (par(3) == par(2))
+        cout << par(3) << " += " << par(1) << ";\n";
+      else
+        cout << par(3) << " = " << par(1) << " + " << par(2) << ";\n";
       ip += 4;
       break;
     case 2: // multiply
-      cout << par(3) << " = " << par(1) << " * " << par(2) << ";\n";
+      if (par(3) == par(1))
+        cout << par(3) << " *= " << par(2) << ";\n";
+      else if (par(3) == par(2))
+        cout << par(3) << " *= " << par(1) << ";\n";
+      else
+        cout << par(3) << " = " << par(1) << " * " << par(2) << ";\n";
       ip += 4;
       break;
     case 3: // input
-      cout << par(1) << " = input; //INPUT\n";
+      cout << par(1) << " = *in++;\n";
       ip += 2;
       break;
     case 4: // output
-      cout << "return " << par(1) << "; //OUTPUT\n";
+      cout << "output(" << par(1) << ");\n";
       ip += 2;
       break;
     case 5: // jump-if-true
-      cout << "if(" << par(1) << " != 0) goto label" << par(2) << ";\n";
+      cout << "if(" << par(1) << " != 0) goto label" << plabel(par(2)) << ";\n";
       ip += 3;
       break;
     case 6: // jump-if-false
-      cout << "if(" << par(1) << " == 0) goto label" << par(2) << ";\n";
+      cout << "if(" << par(1) << " == 0) goto label" << plabel(par(2)) << ";\n";
       ip += 3;
       break;
     case 7: // less than
@@ -139,6 +186,18 @@ void Intcode::compile() const {
     case 8: // equals
       cout << par(3) << " = (" << par(1) << " == " << par(2) << ") ? 1 : 0;\n";
       ip += 4;
+      break;
+    case 9: // set rp
+      cout << "rp += " << par(1) << ";\n";
+      ip += 2;
+      break;
+    case 50: // gosub
+      cout << "gosub " << par(1) << ";\n";
+      ip += 2;
+      break;
+    case 51: // return
+      cout << "return;\n";
+      ip += 1;
       break;
     case 99:
       cout << "return; //HALT\n";

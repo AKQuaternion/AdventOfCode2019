@@ -6,6 +6,7 @@
 #define ADVENTOFCODE2019_INTCODE_HPP
 
 #include <iostream>
+#include <map>
 #include <queue>
 #include <string>
 #include <vector>
@@ -17,19 +18,20 @@ private:
 public:
   enum State { INPUT, OUTPUT, HALT };
   explicit Intcode(std::istream &in);
-  std::pair<State, int> run(std::vector<int> const &input = {});
-  int run(int noun, int verb);
+  std::pair<State, long long> run(std::vector<long long> const &input = {});
+  long long run(int noun, int verb);
   void reset();
-  void enqueueInput(const std::vector<int> &input);
-  void compile() const;
+  void enqueueInput(const std::vector<long long> &input);
+  void compile();
 
 private:
-  int &par(int n);
-  std::vector<int> _originalProgram;
-  std::vector<int> _p;
-  std::queue<int> _input;
-  int _ip = 0;
-  int _lastOutput = 0;
+  long long &par(long long n);
+  std::map<long long, long long> _originalProgram;
+  std::map<long long, long long> _p;
+  std::queue<long long> _input;
+  long long _ip = 0;
+  long long _rp = 0;
+  long long _lastOutput = 0;
 };
 
 #endif // ADVENTOFCODE2019_INTCODE_HPP

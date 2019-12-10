@@ -1,3 +1,6 @@
+//
+// Created by Chris Hartman on 12/8/19.
+//
 #include "Intcode.hpp"
 
 #include <algorithm>
@@ -19,6 +22,7 @@ using std::abs;
 using std::ceil;
 using std::cout;
 using std::endl;
+using std::forward_as_tuple;
 using std::ifstream;
 using std::istream;
 using std::istringstream;
@@ -27,38 +31,25 @@ using std::max;
 using std::max_element;
 using std::min;
 using std::pair;
-using std::set;
 using std::queue;
+using std::set;
 using std::sqrt;
 using std::string;
-using std::forward_as_tuple;
+using std::swap;
 using std::tie;
 using std::tuple;
-using std::swap;
 using std::vector;
 
-void daynnn() {
-  auto star1 = 0;
-  auto star2 = 0;
-  ifstream ifile("../daynnn.txt");
+void day9() {
+  ifstream ifile("../day9.txt");
+  //  istringstream ifile("104,1125899906842624,99");
+  //  istringstream
+  //  ifile("109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99");
+  //  istringstream ifile("1102,34915192,34915192,7,4,7,99,0");
   Intcode i(ifile);
-  string line;
-  while (getline(ifile, line)) {
-    string _s;
-    istringstream iline(line);
-    iline >> _s;
-  }
-
-  cout << "Day nnn star 1 = " << star1 << "\n";
-  cout << "Day nnn star 2 = " << star2 << "\n";
+  auto star1 = i.run({1}).second;
+  i.reset();
+  auto star2 = i.run({2}).second;
+  cout << "Day 9 star 1 = " << star1 << "\n";
+  cout << "Day 9 star 2 = " << star2 << "\n";
 }
-
-// day 1 calculate fuel required
-// day 2 run IntCode program
-// day 3 wires on a grid U D L R
-// day 4 digit passwords
-// day 5 more IntCode
-// day 6 orbits tree traversal
-// day 7 chained IntCode
-// day 8 pixel image
-// day 9
