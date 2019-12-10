@@ -9,6 +9,7 @@
 using std::string;
 using std::vector;
 using std::vector;
+using std::pair;
 
 bool onGrid(const vector<string> &g, int y, int x) {
   return (y >= 0 && y < g.size() && x >= 0 && x < g.size());
