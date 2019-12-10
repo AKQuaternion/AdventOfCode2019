@@ -8,7 +8,6 @@
 
 using std::string;
 using std::vector;
-using std::vector;
 using std::pair;
 
 bool onGrid(const vector<string> &g, int y, int x) {
