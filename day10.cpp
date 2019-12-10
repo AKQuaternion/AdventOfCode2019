@@ -10,14 +10,13 @@ using std::string;
 using std::vector;
 using std::vector;
 
-bool onGrid(const std::vector<std::string> &g, int y, int x) {
+bool onGrid(const vector<string> &g, int y, int x) {
   return (y >= 0 && y < g.size() && x >= 0 && x < g.size());
 }
 
-// fire returns the position of asteroid hit when firing a laser
-// from bc, br in the direction dx, dy, or {0,0} if no asteroid is hit
-pair<int, int> fire(const std::vector<std::string> &g, int bc, int br, int dx,
-                    int dy) {
+// fire returns the position of asteroid hit when firing a laser from bc, br
+// in the direction dx, dy, or returns {0,0} if no asteroid is hit
+pair<int, int> fire(const vector<string> &g, int bc, int br, int dx, int dy) {
   for (int t = 1; true; ++t)
     if (onGrid(g, br + t * dy, bc + t * dx)) {
       if (g[br + t * dy][bc + t * dx] == '#')
