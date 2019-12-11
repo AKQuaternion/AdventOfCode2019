@@ -15,14 +15,14 @@ bool onGrid(const vector<string> &g, int y, int x) {
 }
 
 // fire returns the position of asteroid hit when firing a laser from bc, br
-// in the direction dx, dy, or returns {0,0} if no asteroid is hit
+// in the direction dx, dy, or returns {-1,-1} if no asteroid is hit
 pair<int, int> fire(const vector<string> &g, int bc, int br, int dx, int dy) {
   for (int t = 1; true; ++t)
     if (onGrid(g, br + t * dy, bc + t * dx)) {
       if (g[br + t * dy][bc + t * dx] == '#')
         return {bc + t * dx, br + t * dy};
     } else
-      return {0, 0};
+      return {-1, -1};
 }
 
 void day10() {
@@ -49,7 +49,7 @@ void day10() {
     for (auto x = 0ul; x < grid.size(); ++x)
       if (grid[y][x] == '#') {
         auto detected = count_if(slopes.begin(), slopes.end(), [&](auto s) {
-          return fire(grid, x, y, s.first, s.second) != pair<int, int>{0, 0};
+          return fire(grid, x, y, s.first, s.second) != pair<int, int>{-1, -1};
         });
         if (detected > star1) {
           star1 = detected;
@@ -62,7 +62,7 @@ void day10() {
   while (star2 == 0)
     for (auto [dx, dy] : slopes) {
       auto hitPos = fire(grid, bestCol, bestRow, dx, dy);
-      if (hitPos != pair<int, int>{0, 0}) {
+      if (hitPos != pair<int, int>{-1, -1}) {
         grid[hitPos.second][hitPos.first] = ' ';
         if (++count == 200)
           star2 = hitPos.first * 100 + hitPos.second;
