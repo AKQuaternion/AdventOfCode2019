@@ -4,90 +4,67 @@
 #include "Intcode.hpp"
 
 #include <algorithm>
-#include <cmath>
-#include <cstdlib>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <map>
 #include <numeric>
-#include <queue>
-#include <set>
-#include <sstream>
-#include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
-using std::abs;
-using std::ceil;
 using std::cout;
-using std::endl;
-using std::forward_as_tuple;
 using std::ifstream;
-using std::istream;
-using std::istringstream;
 using std::map;
-using std::max;
-using std::max_element;
-using std::min;
 using std::pair;
-using std::queue;
-using std::set;
-using std::sqrt;
-using std::string;
-using std::swap;
-using std::tie;
-using std::tuple;
 using std::vector;
 using Position = std::pair<int, int>;
-void day11() {
-  static vector<Position> dirs = {{0, 1}, {-1, 0}, {0, -1}, {1, 0}};
 
-  auto star1 = 0;
-  auto star2 = 0;
-  auto dir = 0;
+map<Position, int> paint(int startColor, Intcode &i) {
+  static const vector<Position> dirs = {{0, 1}, {-1, 0}, {0, -1}, {1, 0}};
   Position pos{0, 0};
+  auto dir = 0;
   map<Position, int> grid;
-  //  grid[{0,0}] = 1;
-  ifstream ifile("../day11.txt");
-  Intcode i(ifile);
-  pair<Intcode::State, long long> res{Intcode::INPUT, 0};
-  while (res.first != Intcode::HALT) {
-    //    cout << "(" << pos.first << "," << pos.second << ") " << grid[pos] <<
-    //    endl;
-    if (grid.count(pos) == 1)
-      res = i.run({grid[pos]});
-    else
-      res = i.run({0});
-    if (res.first == Intcode::HALT) {
-      cout << "xxxxx";
-      break;
-    }
-    cout << "paint " << res.second << endl;
-    grid[pos] = res.second;
-    res = i.run();
-    if (res.first == Intcode::HALT)
-      break;
-    assert(res.second == 1 || res.second == 0);
-    cout << "turn " << res.second << endl;
-    dir = (dir + (res.second == 0 ? 1 : 3)) % 4;
+  grid[pos] = startColor;
+  while (true) {
+    Intcode::State state;
+    int out;
+    auto input = (grid.count(pos) == 0) ? 0 : grid[pos];
+    std::tie(state, out) = i.run({input});
+    if (state == Intcode::HALT)
+      return grid;
+    grid[pos] = out;
+    std::tie(state, out) = i.run();
+    if (state == Intcode::HALT)
+      return grid;
+    dir = (dir + (out == 0 ? 1 : 3)) % 4;
     pos.first += dirs[dir].first;
     pos.second += dirs[dir].second;
   }
+}
 
-  auto count = 0;
-  for (auto [pos, v] : grid) {
-    cout << ++count << " (" << pos.first << "," << pos.second << ") " << v
-         << endl;
-  }
+void day11() {
+  ifstream ifile("../day11.txt");
+  Intcode i(ifile);
 
+  auto grid = paint(0, i);
   cout << "Day 11 star 1 = " << grid.size() << "\n";
 
-  for (int y = 50; y > -50; --y) {
-    for (int x = -50; x < 50; ++x)
-      cout << (grid[{x, y}] == 0 ? ' ' : '*');
-    cout << endl;
+  i.reset();
+  grid = paint(1, i);
+  auto whitePos = *std::find_if(grid.begin(), grid.end(),
+                                [](auto p) { return p.second == 1; });
+  int minx = whitePos.first.first, maxx = whitePos.first.first;
+  int miny = whitePos.first.second, maxy = whitePos.first.second;
+  for (auto [pos, c] : grid) {
+    if (c != 1)
+      continue;
+    auto [px, py] = pos;
+    minx = std::min(minx, px);
+    miny = std::min(miny, py);
+    maxx = std::max(maxx, px);
+    maxy = std::max(maxy, py);
   }
-
-  cout << "Day 11 star 2 = " << star2 << "\n";
-} // not 3089
+  for (int y = maxy; y >= miny; --y) {
+    for (int x = minx; x <= maxx; ++x)
+      cout << (grid[{x, y}] == 0 ? "  " : "**");
+    cout << "\n";
+  }
+}

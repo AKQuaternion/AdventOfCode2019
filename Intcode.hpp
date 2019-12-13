@@ -23,6 +23,7 @@ public:
   void reset();
   void enqueueInput(const std::vector<long long> &input);
   void compile();
+  void freeplay() { _p[0] = 2; }
 
 private:
   long long &par(long long n);

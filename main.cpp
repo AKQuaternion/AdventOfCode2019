@@ -43,8 +43,10 @@ int main() {
   //  day7();
   //  day8();
   //  day9();
-  //  day10();
-  day11();
+  //    day10();
+  //  day11();
+  // day12();
+  day13();
 }
 // Day 1 star 1 = 3372756
 // Day 1 star 2 = 5056279
