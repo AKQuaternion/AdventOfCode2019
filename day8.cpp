@@ -23,4 +23,5 @@ void day8() {
 
   for (int i = 0; i < star2.size(); ++i)
     std::cout << ((i % 25 == 0) ? '\n' : ' ') << (star2[i] == '0' ? ' ' : '*');
+  std::cout << "\n";
 }
