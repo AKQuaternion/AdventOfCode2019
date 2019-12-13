@@ -47,9 +47,11 @@ void day9() {
   //  ifile("109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99");
   //  istringstream ifile("1102,34915192,34915192,7,4,7,99,0");
   Intcode i(ifile);
-  auto star1 = i.run({1}).second;
+  i.run({1});
+  auto star1 = i.getOutput().back();
   i.reset();
-  auto star2 = i.run({2}).second;
+  i.run({2});
+  auto star2 = i.getOutput().back();
   cout << "Day 9 star 1 = " << star1 << "\n";
   cout << "Day 9 star 2 = " << star2 << "\n";
 }

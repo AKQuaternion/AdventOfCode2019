@@ -24,19 +24,17 @@ map<Position, int> paint(int startColor, Intcode &i) {
   map<Position, int> grid;
   grid[pos] = startColor;
   while (true) {
-    Intcode::State state;
-    int out;
     auto input = (grid.count(pos) == 0) ? 0 : grid[pos];
-    std::tie(state, out) = i.run({input});
+    auto state = i.run({input});
     if (state == Intcode::HALT)
       return grid;
-    grid[pos] = out;
-    std::tie(state, out) = i.run();
-    if (state == Intcode::HALT)
-      return grid;
-    dir = (dir + (out == 0 ? 1 : 3)) % 4;
-    pos.first += dirs[dir].first;
-    pos.second += dirs[dir].second;
+    auto out = i.getOutput();
+    for (int i = 0; i < out.size(); i += 2) {
+      grid[pos] = out[i];
+      dir = (dir + (out[i + 1] == 0 ? 1 : 3)) % 4;
+      pos.first += dirs[dir].first;
+      pos.second += dirs[dir].second;
+    }
   }
 }
 
@@ -64,7 +62,7 @@ void day11() {
   }
   for (int y = maxy; y >= miny; --y) {
     for (int x = minx; x <= maxx; ++x)
-      cout << (grid[{x, y}] == 0 ? "  " : "**");
+      cout << (grid[{x, y}] == 0 ? "  " : "* ");
     cout << "\n";
   }
 }

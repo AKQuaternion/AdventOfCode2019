@@ -17,7 +17,7 @@ long long Intcode::run(int noun, int verb) {
   run();
   return _p[0];
 }
-#include <iostream>
+
 long long &Intcode::par(long long n) {
   const static int modeDiv[] = {1, 100, 1000, 10000};
   auto mode = (_p[_ip] / modeDiv[n]) % 10;
@@ -33,8 +33,7 @@ long long &Intcode::par(long long n) {
   }
 }
 
-std::pair<Intcode::State, long long>
-Intcode::run(std::vector<long long> const &input) {
+Intcode::State Intcode::run(std::vector<long long> const &input) {
   enqueueInput(input);
   while (_ip < _p.size())
     switch (_p[_ip] % 100) {
@@ -47,16 +46,20 @@ Intcode::run(std::vector<long long> const &input) {
       _ip += 4;
       break;
     case 3: // input
-      if (input.empty())
-        return {INPUT, _lastOutput};
+      if (_input.empty()) {
+        if (!_getInput)
+          return INPUT;
+        else
+          enqueueInput(_getInput());
+      }
       par(1) = _input.front();
       _input.pop();
       _ip += 2;
       break;
     case 4: // output
-      _lastOutput = par(1);
+      _output.push_back(par(1));
       _ip += 2;
-      return {OUTPUT, _lastOutput};
+      break;
     case 5: // jump-if-true
       _ip = (par(1) != 0) ? par(2) : _ip + 3;
       break;
@@ -75,20 +78,13 @@ Intcode::run(std::vector<long long> const &input) {
       _rp += par(1);
       _ip += 2;
       break;
-    case 50: // gosub
-      _p[_rp++] = _ip + 2;
-      _ip = par(1);
-      break;
-    case 51: // return
-      _ip = _p[--_rp];
-      break;
     case 99:
-      return {HALT, _lastOutput};
+      return HALT;
     default:
       throw(
           std::runtime_error("Unimplemented Intcode opcode in Intcode::run()"));
     }
-  return {HALT, _lastOutput};
+  return HALT;
 }
 
 void Intcode::readProgram(std::istream &in) {
@@ -108,6 +104,7 @@ void Intcode::reset() {
   _rp = 0;
   _p = _originalProgram;
   _input = {};
+  _output = {};
 }
 
 void Intcode::enqueueInput(const std::vector<long long> &input) {
@@ -191,14 +188,6 @@ void Intcode::compile() {
       cout << "rp += " << par(1) << ";\n";
       ip += 2;
       break;
-    case 50: // gosub
-      cout << "gosub " << par(1) << ";\n";
-      ip += 2;
-      break;
-    case 51: // return
-      cout << "return;\n";
-      ip += 1;
-      break;
     case 99:
       cout << "return; //HALT\n";
       ip += 1;
@@ -211,4 +200,14 @@ void Intcode::compile() {
       //          Intcode::compile()"));
     }
   }
+}
+
+std::vector<long long> Intcode::getOutput() {
+  std::vector<long long> temp;
+  temp.swap(_output);
+  return temp;
+}
+
+void Intcode::setInputGetter(std::function<std::vector<long long>()> f) {
+  _getInput = f;
 }

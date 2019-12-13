@@ -31,21 +31,26 @@ void day25();
 // day 5 more Intcode
 // day 6 orbits tree traversal
 // day 7 chained Intcode
-
-
+// day 8 pixel image
+// day 9 more Intcode
+// day 10 shoot at asteroids
+// day 11 Intcode paint the spaceship
+// day 12 Moons orbiting each other
+// day 13 Intcode Breakout game
+void day10old();
 int main() {
-  //  day1();
-  //  day2();
-  //  day3();
-  //  day4();
-  //  day5();
-  //  day6();
-  //  day7();
-  //  day8();
-  //  day9();
-  //    day10();
-  //  day11();
-  // day12();
+  day1();
+  day2();
+  day3();
+  day4();
+  day5();
+  day6();
+  day7();
+  day8();
+  day9();
+  day10old();
+  day11();
+  day12();
   day13();
 }
 // Day 1 star 1 = 3372756
@@ -72,6 +77,19 @@ int main() {
 // *     *   * * * *     * *       * *       * *
 // Day 9 star 1 = 4288078517
 // Day 9 star 2 = 69256
+// Day 10 star 1 = 296
+// Day 10 star 2 = 204
+// Day 11 star 1 = 2511
+// **    **      ****  **    **      ****  **    **    ****    ******    ** **
+// **    **        **  **  **          **  **  **    **    **  **    **  ** **
+// ********        **  ****            **  ****      **        **    ** ********
+// **    **        **  **  **          **  **  **    **  ****  ******    ** **
+// **    **  **    **  **  **    **    **  **  **    **    **  **        ** **
+// **    **    ****    **    **    ****    **    **    ******  **        ** **
+// Day 12 star 1 = 13500
+// Day 12 star 2 = 278013787106916
+// Day 13 star 1 = 376
+// Day 13 star 2 = 18509
 
 // Day 2 star 1 = 4138687
 // Day 2 star 2 = 6635
@@ -81,3 +99,10 @@ int main() {
 // Day 7 star 2 = 34579864
 // Day 9 star 1 = 4288078517
 // Day 9 star 2 = 69256
+// Day 11 star 1 = 2511
+// **    **      ****  **    **      ****  **    **    ****    ******    ** **
+// **    **        **  **  **          **  **  **    **    **  **    **  ** **
+// ********        **  ****            **  ****      **        **    ** ********
+// **    **        **  **  **          **  **  **    **  ****  ******    ** **
+// **    **  **    **  **  **    **    **  **  **    **    **  **        ** **
+// **    **    ****    **    **    ****    **    **    ******  **        ** **

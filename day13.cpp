@@ -3,98 +3,79 @@
 //
 #include "Intcode.hpp"
 
-#include <algorithm>
-#include <cmath>
-#include <cstdlib>
-#include <curses.h>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <map>
-#include <numeric>
-#include <queue>
-#include <set>
-#include <sstream>
-#include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
+//#define USECURSES
 
-using std::abs;
-using std::ceil;
-using std::cout;
-using std::endl;
-using std::forward_as_tuple;
-using std::ifstream;
-using std::istream;
-using std::istringstream;
-using std::map;
-using std::max;
-using std::max_element;
-using std::min;
-using std::pair;
-using std::queue;
-using std::set;
-using std::sqrt;
-using std::string;
-using std::swap;
-using std::tie;
-using std::tuple;
-using std::vector;
+#ifdef USECURSES
+#include <curses.h>
+#endif
+#include <fstream>
+#include <iostream>
+#include <numeric>
+
+int sgn(double v) { return (v > 0) - (v < 0); }
+
+void display(int x, int y, int tile) {
+#ifdef USECURSES
+  char symbol[] = " |#=o";
+
+  for (auto row = 0; row < 25; ++row) {
+    for (auto col = 0; col < 80; ++col) {
+      move(row, col);
+      addch((symbol[grid[{col, row}]]));
+    }
+  }
+  move(0, 0);
+  std::ostringstream out;
+  out << score;
+  addstr(out.str().c_str());
+  refresh();
+#endif
+}
 
 void day13() {
-  long score = 0;
-  int ballPos = 0;
-  int paddlePos = 0;
-  char symbol[] = " |#=o";
-//  initscr();
+#ifdef USECURSES
+  initscr();
+  clear();
+#endif
   auto star1 = 0;
   auto star2 = 0;
-  ifstream ifile("../day13.txt");
-  Intcode i(ifile);
-  i.freeplay();
-  map<pair<int, int>, int> grid;
-  vector<long long> input;
-  auto dir = [](int b, int p) {
-    if (b < p)
-      return -1;
-    if (b == p)
-      return 0;
-    return 1;
-  };
-  while (true) {
-    auto [s, x] = i.run(input);
-    input.clear();
-    if (s == Intcode::HALT)
-      break;
-    if (s == Intcode::INPUT) {
-      input = {dir(ballPos, paddlePos)};
-      continue;
-    }
-    auto [s2, y] = i.run();
-    auto [s3, z] = i.run();
-    if (z == 4)
-      ballPos = x;
-    if (z == 3)
-      paddlePos = x;
-    if (x == -1 && y == 0) {
-      score = z;
-//      cout << "Score = " << score << "\n";
-    }
-//    clear();
-//    for (auto row = 0; row < 25; ++row) {
-//      for (auto col = 0; col < 80; ++col) {
-//        move(row, col);
-//        addch((symbol[grid[{col, row}]]));
-//      }
-//    }
-//    move(0, 0);
-//    std::ostringstream out;
-//    out << score;
-//    addstr(out.str().c_str());
-//    refresh();
-  }
+  std::ifstream ifile("../day13.txt");
+  Intcode program(ifile);
+  program.run();
+  auto out = program.getOutput();
+  for (int i = 0; i < out.size(); i += 3)
+    if (out[i + 2] == 2)
+      ++star1;
 
-  cout << "Day 13 star 1 = " << star1 << "\n";
-  cout << "Day 13 star 2 = " << score << "\n";
+  program.reset();
+  program.freeplay();
+  int ballPos = 0;
+  int paddlePos = 0;
+
+  auto processOutput = [&] {
+    auto out = program.getOutput();
+    for (int i = 0; i < out.size();) {
+      auto x = out[i++];
+      auto y = out[i++];
+      auto tile = out[i++];
+      if (x == -1 && y == 0)
+        star2 = tile;
+      else if (tile == 4)
+        ballPos = x;
+      else if (tile == 3)
+        paddlePos = x;
+      display(x, y, tile);
+    }
+  };
+
+  program.setInputGetter([&]() -> std::vector<long long> {
+    processOutput();
+    return {sgn(ballPos - paddlePos)};
+  });
+
+  program.run();
+  processOutput();
+
+  std::cout << "Day 13 star 1 = " << star1 << "\n";
+  std::cout << "Day 13 star 2 = " << star2 << "\n";
 }
