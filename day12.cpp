@@ -124,34 +124,33 @@ void day12() {
     moons.emplace_back(line);
   }
 
-  //  for (int time = 0; time < 1000; ++time) {
-  //    //    cout << "After " << time << " steps:\n";
-  //    //    for (auto &m : moons)
-  //    //      cout << m << endl;
-  //    //
-  //    //    cout << endl;
-  //
-  //    for (int m1 = 0; m1 < moons.size(); ++m1)
-  //      for (int m2 = m1 + 1; m2 < moons.size(); ++m2)
-  //        updateVelocity(moons[m1], moons[m2]);
-  //
-  //    for (auto &m : moons)
-  //      m.updatePosition();
-  //  }
+  long long star2 = 1;
+  for (int ii = 0; ii < 3; ++ii) {
+    vector<int> p;
+    for (auto &m : moons)
+      p.push_back(m.p[ii]);
+    star2 = std::lcm(star2, cycleTime(p));
+  }
+
+  for (int time = 0; time < 1000; ++time) {
+    //    cout << "After " << time << " steps:\n";
+    //    for (auto &m : moons)
+    //      cout << m << endl;
+    //
+    //    cout << endl;
+
+    for (int m1 = 0; m1 < moons.size(); ++m1)
+      for (int m2 = m1 + 1; m2 < moons.size(); ++m2)
+        updateVelocity(moons[m1], moons[m2]);
+
+    for (auto &m : moons)
+      m.updatePosition();
+  }
 
   auto star1 =
       std::accumulate(moons.begin(), moons.end(), 0,
                       [](auto sum, auto m) { return sum + m.energy(); });
 
   cout << "Day 12 star 1 = " << star1 << "\n";
-
-  long long star2 = 1;
-  for (int ii = 0; ii < 3; ++ii) {
-    vector<int> p;
-    for (auto &m : moons)
-      p.push_back(m.p[ii]);
-    cout << cycleTime(p) << "\n";
-    star2 = std::lcm(star2, cycleTime(p));
-  }
   cout << "Day 12 star 2 = " << star2 << "\n";
 }
