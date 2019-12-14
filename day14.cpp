@@ -108,12 +108,13 @@ void day14() {
 
   auto oreNeededForFuel = [&](Number fuel) {
     map<string, Number> amountNeeded{{"FUEL", fuel}};
-    for (auto chemical : chemicalsInOrder) {
-      auto &[amountReactionMakes, ingredients] = reactions[chemical];
-      for (auto &[reactionRequires, name] : ingredients)
-        amountNeeded[name] +=
-            reactionRequires *
+    for (const auto &chemical : chemicalsInOrder) {
+      const auto &[amountReactionMakes, ingredients] = reactions[chemical];
+      for (const auto &[reactionRequires, name] : ingredients) {
+        auto timesToRunReaction =
             intDivRoundUp(amountNeeded[chemical], amountReactionMakes);
+        amountNeeded[name] += reactionRequires * timesToRunReaction;
+      }
     }
     return amountNeeded["ORE"];
   };
