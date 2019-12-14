@@ -4,23 +4,15 @@
 
 #include <deque>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <map>
-#include <numeric>
 #include <set>
 #include <sstream>
 #include <string>
-#include <tuple>
-#include <utility>
 #include <vector>
 
-using std::cout;
-using std::ifstream;
-using std::istringstream;
 using std::map;
 using std::pair;
-using std::set;
 using std::string;
 using std::vector;
 using Number = unsigned long long;
@@ -36,7 +28,7 @@ struct Reaction {
 };
 
 void topoHelper(const string &name, const map<string, Reaction> &reactions,
-                set<string> &visited, std::deque<string> &order) {
+                std::set<string> &visited, std::deque<string> &order) {
   if (name == "ORE")
     return;
   visited.insert(name);
@@ -49,7 +41,7 @@ void topoHelper(const string &name, const map<string, Reaction> &reactions,
 
 std::deque<string> topoSort(const string &name,
                             const map<string, Reaction> &reactions) {
-  set<string> visited;
+  std::set<string> visited;
   std::deque<string> order;
   topoHelper(name, reactions, visited, order);
   return order;
@@ -61,7 +53,7 @@ map<string, Reaction> readInput(std::istream &ifile) {
   while (getline(ifile, line)) {
     Ingredient i;
     vector<Ingredient> ingredients;
-    istringstream iline(line);
+    std::istringstream iline(line);
     bool done = false;
     while (!done) {
       iline >> i.amountRequired >> i.ingredientName;
@@ -79,7 +71,7 @@ map<string, Reaction> readInput(std::istream &ifile) {
 }
 
 void day14() {
-  ifstream ifile("../day14.txt");
+  std::ifstream ifile("../day14.txt");
   //    istringstream ifile("9 ORE => 2 A\n"
   //                        "8 ORE => 3 B\n"
   //                        "7 ORE => 5 C\n"
@@ -119,7 +111,7 @@ void day14() {
     return amountNeeded["ORE"];
   };
 
-  cout << "Day 14 star 1 = " << oreNeededForFuel(1) << "\n";
+  std::cout << "Day 14 star 1 = " << oreNeededForFuel(1) << "\n";
   auto lower = 0ull;
   auto upper = 1000000000000ull;
   while (lower != upper) {
@@ -131,5 +123,5 @@ void day14() {
       upper = mid;
   }
 
-  cout << "Day 14 star 2 = " << lower - 1 << "\n";
+  std::cout << "Day 14 star 2 = " << lower - 1 << "\n";
 }

@@ -1,3 +1,6 @@
+#include <chrono>
+#include <iostream>
+
 void day1();
 void day2();
 void day3();
@@ -38,7 +41,14 @@ void day25();
 // day 12 Moons orbiting each other
 // day 13 Intcode Breakout game
 void day10old();
+
+double timesec() {
+  auto nanos = static_cast<std::chrono::nanoseconds>(
+      std::chrono::high_resolution_clock::now().time_since_epoch());
+  return static_cast<double>(nanos.count()) / 1.e9;
+}
 int main() {
+  double time1 = timesec(); // End time (sec)
   //  day1();
   //  day2();
   //  day3();
@@ -53,6 +63,9 @@ int main() {
   //  day12();
   //  day13();
   day14();
+  double time2 = timesec();           // End time (sec)
+  double elapsedtime = time2 - time1; // Elapsed (sec)
+  std::cout << "Time required: " << elapsedtime << " seconds" << std::endl;
 }
 // Day 1 star 1 = 3372756
 // Day 1 star 2 = 5056279
