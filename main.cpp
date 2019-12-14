@@ -39,19 +39,20 @@ void day25();
 // day 13 Intcode Breakout game
 void day10old();
 int main() {
-  day1();
-  day2();
-  day3();
-  day4();
-  day5();
-  day6();
-  day7();
-  day8();
-  day9();
-  day10old();
-  day11();
-  day12();
-  day13();
+  //  day1();
+  //  day2();
+  //  day3();
+  //  day4();
+  //  day5();
+  //  day6();
+  //  day7();
+  //  day8();
+  //  day9();
+  //  day10old();
+  //  day11();
+  //  day12();
+  //  day13();
+  day14();
 }
 // Day 1 star 1 = 3372756
 // Day 1 star 2 = 5056279
@@ -90,7 +91,10 @@ int main() {
 // Day 12 star 2 = 278013787106916
 // Day 13 star 1 = 376
 // Day 13 star 2 = 18509
+// Day 14 star 1 = 97422
+// Day 14 star 2 = 13108426
 
+// Intcode days:
 // Day 2 star 1 = 4138687
 // Day 2 star 2 = 6635
 // Day 5 star 1 = 16348437
@@ -106,3 +110,5 @@ int main() {
 // **    **        **  **  **          **  **  **    **  ****  ******    ** **
 // **    **  **    **  **  **    **    **  **  **    **    **  **        ** **
 // **    **    ****    **    **    ****    **    **    ******  **        ** **
+// Day 13 star 1 = 376
+// Day 13 star 2 = 18509
