@@ -133,9 +133,10 @@ bool byatan2(pair<int, int> s1, pair<int, int> s2) {
 //  auto [it1,it2] =
 //  std::mismatch(d10old.begin(),d10old.end(),destructionOrder.begin(),destructionOrder.end());
 //
-////  for(int i=(it2-destructionOrder.begin());i<destructionOrder.size();++i)
-////    std::cout << i << " " <<
-///destructionOrder[i].first*100+destructionOrder[i].second << "\n";
+////  for(int
+///Number=(it2-destructionOrder.begin());Number<destructionOrder.size();++Number)
+////    std::cout << Number << " " <<
+/// destructionOrder[Number].first*100+destructionOrder[Number].second << "\n";
 //  auto [x, y] = destructionOrder[200];
 //  std::cout << "Day 10 star 1 = " << star1 << "\n";
 //  std::cout << "Day 10 star 2 = " << x * 100 + y << "\n";

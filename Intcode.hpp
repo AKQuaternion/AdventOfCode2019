@@ -27,7 +27,6 @@ public:
   void compile();
   void freeplay() { _p[0] = 2; }
   std::vector<long long> getOutput();
-  void setInputGetter(std::function<std::vector<long long>()>);
 
 private:
   std::map<long long, long long> _originalProgram;
@@ -36,7 +35,6 @@ private:
   long long _ip = 0;
   long long _rp = 0;
   std::vector<long long> _output;
-  std::function<std::vector<long long>()> _getInput;
 };
 
 #endif // ADVENTOFCODE2019_INTCODE_HPP

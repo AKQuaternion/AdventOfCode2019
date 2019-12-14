@@ -46,12 +46,8 @@ Intcode::State Intcode::run(std::vector<long long> const &input) {
       _ip += 4;
       break;
     case 3: // input
-      if (_input.empty()) {
-        if (!_getInput)
-          return INPUT;
-        else
-          enqueueInput(_getInput());
-      }
+      if (_input.empty())
+        return INPUT;
       par(1) = _input.front();
       _input.pop();
       _ip += 2;
@@ -195,9 +191,9 @@ void Intcode::compile() {
     default:
       cout << "// p" << ip << " = " << _p[ip] << ";\n";
       ip += 1;
-      //      throw(
-      //          std::runtime_error("Unimplemented Intcode opcode in
-      //          Intcode::compile()"));
+      //            throw(
+      //                std::runtime_error("Unimplemented Intcode opcode in
+      //                Intcode::compile()"));
     }
   }
 }
@@ -206,8 +202,4 @@ std::vector<long long> Intcode::getOutput() {
   std::vector<long long> temp;
   temp.swap(_output);
   return temp;
-}
-
-void Intcode::setInputGetter(std::function<std::vector<long long>()> f) {
-  _getInput = f;
 }

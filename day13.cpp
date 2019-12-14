@@ -52,7 +52,10 @@ void day13() {
   int ballPos = 0;
   int paddlePos = 0;
 
-  auto processOutput = [&] {
+  std::vector<long long> input;
+
+  while (true) {
+    auto state = program.run(input);
     auto out = program.getOutput();
     for (int i = 0; i < out.size();) {
       auto x = out[i++];
@@ -66,15 +69,10 @@ void day13() {
         paddlePos = x;
       display(x, y, tile);
     }
-  };
-
-  program.setInputGetter([&]() -> std::vector<long long> {
-    processOutput();
-    return {sgn(ballPos - paddlePos)};
-  });
-
-  program.run();
-  processOutput();
+    if (state == Intcode::HALT)
+      break;
+    input = {sgn(ballPos - paddlePos)};
+  }
 
   std::cout << "Day 13 star 1 = " << star1 << "\n";
   std::cout << "Day 13 star 2 = " << star2 << "\n";
