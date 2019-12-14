@@ -59,21 +59,21 @@ map<string, Reaction> readInput(std::istream &ifile) {
   map<string, Reaction> reactions;
   string line;
   while (getline(ifile, line)) {
-    string name;
-    int howMuch;
+    Ingredient i;
     vector<Ingredient> ingredients;
     istringstream iline(line);
     bool done = false;
     while (!done) {
-      iline >> howMuch >> name;
-      if (name.back() == ',')
-        name.pop_back();
+      iline >> i.amountRequired >> i.ingredientName;
+      if (i.ingredientName.back() == ',')
+        i.ingredientName.pop_back();
       else
         done = true;
-      ingredients.push_back(Ingredient{howMuch, name});
+      ingredients.push_back(i);
     }
-    iline >> name >> howMuch >> name; // "=>" num reagent
-    reactions[name] = {howMuch, ingredients};
+    string arrow;
+    iline >> arrow >> i.amountRequired >> i.ingredientName; // "=>" num reagent
+    reactions[i.ingredientName] = {i.amountRequired, ingredients};
   }
   return reactions;
 }
