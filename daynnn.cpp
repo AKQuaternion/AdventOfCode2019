@@ -52,13 +52,3 @@ void daynnn() {
   cout << "Day nnn star 1 = " << star1 << "\n";
   cout << "Day nnn star 2 = " << star2 << "\n";
 }
-
-// day 1 calculate fuel required
-// day 2 run IntCode program
-// day 3 wires on a grid U D L R
-// day 4 digit passwords
-// day 5 more IntCode
-// day 6 orbits tree traversal
-// day 7 chained IntCode
-// day 8 pixel image
-// day 9
