@@ -50,7 +50,7 @@ void day16() {
   cout << line.size() << endl;
   //  line = "12345678";
   // line = "03036732577212944063491565474664";
-  vector<char> x;
+  vector<char> x(1);
   for (auto c : line)
     x.push_back(c - '0');
 
@@ -62,25 +62,41 @@ void day16() {
   int sequence[] = {0, 1, 0, -1};
   for (int t = 1; t <= 100; ++t) {
     cout << t << endl;
-    vector<char> n;
-    for (int i = 0; i < v.size(); ++i) {
+    vector<char> n(1);
+    for (int i = 1; i < v.size(); ++i) {
       int sum = 0;
       for (int j = 0; j < v.size(); ++j) {
-        sum += (sequence[((j + 1) % (4 * (i + 1))) / (i + 1)] * v[j]);
+        sum += (sequence[((j) % (4 * (i))) / (i)] * v[j]);
       }
       n.push_back(abs(sum) % 10);
       //      cout << " = " << int(n.back()) << endl;
-      cout << int(n.back()) << " ";
     }
     v = n;
+    for (auto c : v)
+      cout << int(c) << " ";
     cout << endl;
   }
   //  for(int i=5970221;i<5970221+8;++i)
   //  for(int i=0303673;i<0303673+8;++i)
-  for (int i = 0; i < 8; ++i)
+  for (int i = 1; i < 9; ++i)
     cout << int(v[i]);
   cout << endl;
   cout << "Day 16 star 1 = " << star1 << "\n";
   cout << "Day 16 star 2 = " << star2 << "\n";
-} // 23845678 no
+}
 // 44098263
+
+// 1
+// 4 8 2 2 6 1 5 8
+// 2
+// 3 4 0 4 0 4 3 8
+// 3
+// 0 3 4 1 5 5 1 8
+// 4
+// 0 1 0 2 9 4 9 8
+// 5
+// 0 2 1 4 0 1 7 8
+// 6
+// 8 5 5 2 6 6 5 8
+// 7
+// 4 1 3 9 5 9 3 8
