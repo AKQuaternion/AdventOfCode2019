@@ -64,7 +64,8 @@ int main() {
   //  day13();
   //  day14();
   //  day15();
-  day16();
+  //  day16();
+  day17();
   double time2 = timesec();           // End time (sec)
   double elapsedtime = time2 - time1; // Elapsed (sec)
   std::cout << "Time required: " << elapsedtime << " seconds" << std::endl;
