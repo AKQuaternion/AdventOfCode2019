@@ -6,7 +6,9 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <map>
+#include <memory>
 #include <numeric>
 #include <queue>
 #include <set>
@@ -16,6 +18,7 @@
 #include <utility>
 #include <vector>
 using std::abs;
+using std::ceil;
 using std::ceil;
 using std::cout;
 using std::endl;

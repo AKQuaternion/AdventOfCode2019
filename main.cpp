@@ -40,6 +40,10 @@ void day25();
 // day 11 Intcode paint the spaceship
 // day 12 Moons orbiting each other
 // day 13 Intcode Breakout game
+// day 14 Chemical reactions tree of requirements
+// day 15 Intcode repair droid to model search
+// day 16 "FFT" of signals
+// day 17 Intcode ASCII vacuum robot on scaffolding
 void day10old();
 
 double timesec() {
@@ -65,7 +69,8 @@ int main() {
   //  day14();
   //  day15();
   //  day16();
-  day17();
+  //  day17();
+  day18();
   double time2 = timesec();           // End time (sec)
   double elapsedtime = time2 - time1; // Elapsed (sec)
   std::cout << "Time required: " << elapsedtime << " seconds" << std::endl;
