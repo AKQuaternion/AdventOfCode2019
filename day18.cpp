@@ -97,7 +97,8 @@ void dfsDistances(char from, Vertex node, int dist) {
   visitedFrom[from].insert(node);
   auto ch = grid[node.first][node.second];
   if (islower(ch)) {
-    distances[from == '@' ? 0 : from - 'a' + 1][ch - 'a'] = dist;
+    distances[from == '@' ? 0 : from - 'a' + 1][ch - 'a'] =
+        (from == ch ? 9999 : dist);
   }
 
   for (auto nbr : edges[node]) {
@@ -177,8 +178,6 @@ int backtrack(string &order, vector<bool> &found, int howFar) {
     return memos[nextChoice.size()][order.back() - 'a'][nextChoice];
   }
 
-  auto dHowFar = 0;
-
   sort(nextChoice.begin(), nextChoice.end(), [&order](auto x, auto y) {
     auto firstCoord = (order.empty() ? 0 : order.back() - 'a' + 1);
     return distances[firstCoord][x] < distances[firstCoord][y];
@@ -186,8 +185,9 @@ int backtrack(string &order, vector<bool> &found, int howFar) {
 
   int bestExtension = 999999999;
   auto bound = 0;
-  for (auto i : nextChoice)
-    bound += minDistance[i - 'a'];
+  for (int i = 0; i < found.size(); ++i)
+    if (!found[i])
+      bound += minDistance[i];
   for (auto i : nextChoice) {
     auto oldFound = found;
     for (auto x : forFree.at(i + 'a'))
@@ -196,42 +196,23 @@ int backtrack(string &order, vector<bool> &found, int howFar) {
                                    : distances[order.back() - 'a' + 1][i]);
     auto newHowFar = howFar + thisStep;
     order.push_back('a' + i);
-    assert(bound - minDistance[order.back() - 'a'] >= 0);
+    //    assert(bound - minDistance[order.back() - 'a'] >= 0);
     int extension = bestExtension;
-    if (newHowFar + bound - minDistance[order.back() - 'a'] < bestFar)
-      //    if(newHowFar < bestFar)
+
+    //    if (newHowFar == bestFar)
+    //      cout << "hmm\n";
+    if (newHowFar + bound < bestFar)
+      //    if (newHowFar < bestFar)
       extension = thisStep + backtrack(order, found, newHowFar);
     order.pop_back();
     found = oldFound;
     if (extension < bestExtension)
       bestExtension = extension;
   }
-  if (!order.empty())
+  if (!order.empty() && bestExtension != 999999999)
     memos[nextChoice.size()][order.back() - 'a'][nextChoice] = bestExtension;
-  return bestExtension;
-}
 
-void tryLast(char last) {
-  string order;
-  order.push_back(last);
-  while (!mustBefore[last].empty()) {
-    last = mustBefore[last].back();
-    order.push_back(last);
-  }
-  cout << order << endl;
-  int recent = 0;
-  int howFar = 0;
-  for (auto i = order.rbegin(); i != order.rend(); ++i) {
-    //    cout << char(recent+'a'-1) << " to " << *i << " is " <<
-    //    distances[recent][*i-'a'] << endl;
-    howFar += distances[recent][*i - 'a'];
-    recent = *i - 'a' + 1;
-  }
-  if (howFar > bestFar) {
-    bestFar = howFar;
-    bestOrder = order;
-    cout << order << " with cost " << howFar << endl;
-  }
+  return bestExtension;
 }
 } // namespace
 
@@ -253,12 +234,12 @@ void day18() {
   //                        "#.....@.a.B.c.d.A.e.F.g#\n"
   //                        "########################");
   //
-  //    istringstream ifile("########################\n"
-  //                        "#@..............ac.GI.b#\n"
-  //                        "###d#e#f################\n"
-  //                        "###A#B#C################\n"
-  //                        "###g#h#i################\n"
-  //                        "########################");
+  //  istringstream ifile("########################\n"
+  //                      "#@..............ac.GI.b#\n"
+  //                      "###d#e#f################\n"
+  //                      "###A#B#C################\n"
+  //                      "###g#h#i################\n"
+  //                      "########################");
 
   istringstream ifile("#################\n"
                       "#i.G..c...e..H.p#\n"
@@ -348,3 +329,13 @@ void day18() {
 // Day 18 star 1 = 4562
 // Day 18 star 2 = 0
 // Time required: 3177.78 seconds
+
+// agbfceidhmlknjop with cost 150 after exploring 17
+// agbfceidlhmkn with cost 146 after exploring 3053
+// agbfciedlhmkn with cost 142 after exploring 241897
+// agbjfciedlhm with cost 138 after exploring 3945895
+// bfgncie with cost 136 after exploring 749482208
+// 4821189727
+// Day 18 star 1 = 136
+// Day 18 star 2 = 0
+// Time required: 3553.35 seconds
