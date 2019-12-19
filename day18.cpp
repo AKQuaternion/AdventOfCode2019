@@ -51,69 +51,36 @@ vector<string> grid;
 using Vertex = pair<int, int>;
 
 map<Vertex, vector<Vertex>> edges;
-map<char, string> mustBefore;
-map<Vertex, Vertex> seenBy;
-set<Vertex> visited;
+map<char, Vertex> positionOf;
 char maxKey = 'a';
 
-void dfs(Vertex node, string &doors, string &keys, string &all) {
-  //!!! Try passing by value, make sure still works
-  auto ch = grid[node.first][node.second];
-  if (islower(ch)) {
-    mustBefore[ch] = doors + keys;
-    keys += ch;
-    all += ch;
-    //    cout << "A: " << all << endl;
-    maxKey = max(maxKey, ch);
-  }
-  if (isupper(ch)) {
-    doors += tolower(ch);
-    all += ch;
-    //    cout << "A: " << all << endl;
-  }
-  for (auto nbr : edges[node]) {
-    if (nbr == seenBy[node]) // should assert this happens, except for root
+auto bfs(string order) {
+  vector<pair<char, int>> result;
+  assert(!order.empty());
+  auto ch = order.back();
+  set<Vertex> visited;
+  queue<pair<Vertex, int>> q;
+  q.push({positionOf[ch], 0});
+  while (!q.empty()) {
+    //    auto [node, dist] = q.front();
+    auto p = q.front();
+    auto node = p.first;
+    auto dist = p.second; // just for debugging
+    q.pop();
+    if (visited.count(node))
       continue;
-    if (seenBy.count(nbr) != 0) {
-      if (visited.count(nbr))
-        cout << "Not a tree (but still a DAG" << endl;
-      else
-        cout << "Found a cycle, not a DAG!" << endl;
-    } else {
-      seenBy[nbr] = node;
-      dfs(nbr, doors, keys, all);
+    visited.insert(node);
+    ch = grid[node.first][node.second];
+    if (islower(ch) && order.find(ch) == string::npos) {
+      result.emplace_back(ch, dist);
     }
+    if (isupper(ch) && order.find(tolower(ch)) == string::npos)
+      continue;
+    for (auto nbr : edges[node])
+      if (visited.count(nbr) == 0)
+        q.push({nbr, dist + 1});
   }
-  if (isupper(ch)) {
-    doors.pop_back();
-    all.pop_back();
-  }
-  if (islower(ch)) {
-    keys.pop_back();
-    all.pop_back();
-  }
-  visited.insert(node);
-}
-
-// map<char, map<char, int>> distances;
-int distances[27][27];
-int minDistance[26];
-
-map<char, set<Vertex>> visitedFrom;
-
-void dfsDistances(char from, Vertex node, int dist) {
-  visitedFrom[from].insert(node);
-  auto ch = grid[node.first][node.second];
-  if (islower(ch)) {
-    distances[from == '@' ? 0 : from - 'a' + 1][ch - 'a'] =
-        (from == ch ? 9999 : dist);
-  }
-
-  for (auto nbr : edges[node]) {
-    if (visitedFrom[from].count(nbr) == 0) {
-      dfsDistances(from, nbr, dist + 1);
-    }
-  }
+  return result;
 }
 
 auto numNodesExplored = 0ull;
@@ -122,7 +89,7 @@ int bestFar = 999999999;
 map<string, int> memos;
 map<string, char> memoOrder;
 
-int backtrack(string &order, vector<bool> &found, int howFar) {
+int backtrack(string &order, int howFar) {
   ++numNodesExplored;
 
   auto memoString = order;
@@ -138,24 +105,12 @@ int backtrack(string &order, vector<bool> &found, int howFar) {
     return memos.at(memoString);
   }
 
-  vector<int> possibleNextChoices;
-  for (int i = 0; i < found.size(); ++i) {
-    if (found[i])
-      continue;
-    bool prereqs = true;
-    for (auto l : mustBefore.at(i + 'a'))
-      if (!found[l - 'a']) {
-        prereqs = false;
-        break;
-      }
-    if (prereqs)
-      possibleNextChoices.push_back(i);
-  }
+  auto possibleNextChoices = bfs(order);
 
   if (numNodesExplored < 100 || order.size() <= 5) {
     cout << order << "    "; // << endl;
-    for (auto n : possibleNextChoices)
-      cout << char('a' + n);
+    for (auto [n, dist] : possibleNextChoices)
+      cout << n << ":" << dist << ",  ";
     cout << endl;
   }
 
@@ -163,21 +118,17 @@ int backtrack(string &order, vector<bool> &found, int howFar) {
   char bestChar = '\0';
   bool first = true;
 
-  for (auto i : possibleNextChoices) {
-    found[i] = true;
-    auto thisStep = (order.empty() ? distances[0][i]
-                                   : distances[order.back() - 'a' + 1][i]);
-    auto newHowFar = howFar + thisStep;
-    order.push_back('a' + i);
+  for (auto [n, dist] : possibleNextChoices) {
+    auto newHowFar = howFar + dist;
+    order.push_back(n);
 
-    auto extension = thisStep + backtrack(order, found, newHowFar);
+    auto extension = dist + backtrack(order, newHowFar);
     if (first || extension < bestExtension) {
       first = false;
       bestExtension = extension;
       bestChar = order.back();
     }
     order.pop_back();
-    found[i] = false;
   }
   if (first)
     if (howFar < bestFar) {
@@ -191,19 +142,17 @@ int backtrack(string &order, vector<bool> &found, int howFar) {
 }
 } // namespace
 
-map<char, Vertex> positions;
-
-int calculateDistance(const string &s) {
-  auto d = 0;
-  char last = 'a' - 1;
-  for (auto c : s) {
-    //    cout << last << " -> " << c << " = " << distances[last-'a'+1][c-'a']
-    //    << endl;
-    d += distances[last - 'a' + 1][c - 'a'];
-    last = c;
-  }
-  return d;
-}
+// int calculateDistance(const string &s) {
+//  auto d = 0;
+//  char last = 'a' - 1;
+//  for (auto c : s) {
+//    //    cout << last << " -> " << c << " = " << distances[last-'a'+1][c-'a']
+//    //    << endl;
+//    d += distances[last - 'a' + 1][c - 'a'];
+//    last = c;
+//  }
+//  return d;
+//}
 
 void showDistance(string s) { // stop at null!!!!
   auto mutateOrder = s;
@@ -215,7 +164,7 @@ void showDistance(string s) { // stop at null!!!!
       break;
     s.push_back(mutateOrder.back());
   }
-  cout << s << " has distance " << calculateDistance(s) << endl;
+  //  cout << s << " has distance " << calculateDistance(s) << endl;
 }
 
 void day18() {
@@ -240,15 +189,15 @@ void day18() {
   //                            "###g#h#i################\n"
   //                            "########################");
 
-  //    istringstream ifile("#################\n"
-  //                        "#i.G..c...e..H.p#\n"
-  //                        "########.########\n"
-  //                        "#j.A..b...f..D.o#\n"
-  //                        "########@########\n"
-  //                        "#k.E..a...g..B.n#\n"
-  //                        "########.########\n"
-  //                        "#l.F..d...h..C.m#\n"
-  //                        "#################");
+  //      istringstream ifile("#################\n"
+  //                          "#i.G..c...e..H.p#\n"
+  //                          "########.########\n"
+  //                          "#j.A..b...f..D.o#\n"
+  //                          "########@########\n"
+  //                          "#k.E..a...g..B.n#\n"
+  //                          "########.########\n"
+  //                          "#l.F..d...h..C.m#\n"
+  //                          "#################");
   string line;
 
   while (getline(ifile, line)) {
@@ -257,10 +206,12 @@ void day18() {
 
   for (int r = 0; r < grid.size(); ++r)
     for (int c = 0; c < grid[r].size(); ++c) {
+      if (islower(grid[r][c]))
+        maxKey = max(grid[r][c], maxKey);
       if (grid[r][c] == '#')
         continue;
-      if (grid[r][c] != '.' && !isupper(grid[r][c]))
-        positions[grid[r][c]] = {r, c};
+      if (grid[r][c] != '.' && !isupper(grid[r][c])) // key or @
+        positionOf[grid[r][c]] = {r, c};
       auto putEdge = [&](int y, int x) {
         if (grid[y][x] != '#')
           edges[{r, c}].push_back({y, x});
@@ -280,37 +231,16 @@ void day18() {
   string doors;
   string keys;
   string all{"@"};
-  dfs(positions['@'], doors, keys, all);
 
   cout << "Max key is " << maxKey << endl;
-  //  for (auto [c, s] : mustBefore)
-  //    cout << c << " after " << s << endl;
-  //    for (auto [c, s] : forFree)
-  //      cout << c << " forFree gives " << s << endl;
-  for (auto [c, pos] : positions) {
-    dfsDistances(c, pos, 0);
-  }
 
-  for (auto c = 'a'; c <= maxKey; ++c)
-    minDistance[c - 'a'] = *std::min_element(std::begin(distances[c - 'a' + 1]),
-                                             std::end(distances[c - 'a' + 1]));
-
-  //  for (auto [from, dists] : distances) {
-  //    cout << from << " --> ";
-  //    for (auto [to, d] : dists)
-  //      cout << to << "=" << d << ", ";
-  //    cout << endl;
-  //  }
-  //  findOrderings();
-
-  string order;
-  vector<bool> found(maxKey - 'a' + 1);
-  auto star1 = backtrack(order, found, 0);
+  string order{"@"};
+  auto star1 = backtrack(order, 0);
   cout << numNodesExplored << " nodes explored.\n";
 
   cout << "Day 18 star 1 = " << star1 << "\n";
   cout << "Day 18 star 2 = " << star2 << "\n";
-  showDistance("");
+  showDistance("@");
   //  showDistance("afbjgnhdloepcikm");
 } // not 4530, not 4550
   // xkvncotfhaegqyzbusdiwpjlrm with cost 5070 after exploring 27
