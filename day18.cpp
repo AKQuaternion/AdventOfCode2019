@@ -52,7 +52,6 @@ using Vertex = pair<int, int>;
 
 map<Vertex, vector<Vertex>> edges;
 map<char, string> mustBefore;
-map<char, string> forFree;
 set<Vertex> visited;
 char maxKey = 'a';
 
@@ -64,7 +63,6 @@ void dfs(Vertex node, string &doors, string &keys, string &all) {
     keys += ch;
     all += ch;
     //    cout << "A: " << all << endl;
-    forFree[ch] = keys;
     maxKey = max(maxKey, ch);
   }
   if (isupper(ch)) {
@@ -108,32 +106,15 @@ void dfsDistances(char from, Vertex node, int dist) {
   }
 }
 
-void findOrderings() {
-  string keys(maxKey - 'a' + 1, ' ');
-  std::iota(keys.begin(), keys.end(), 'a');
-  do {
-    vector<int> found(keys.size());
-    for (auto k : keys) {
-      found[k - 'a'] = true;
-      for (auto l : mustBefore[k])
-        if (!found[l - 'a'])
-          goto NEXTPERM;
-    }
-    cout << keys << endl;
-  NEXTPERM:;
-  } while (next_permutation(keys.begin(), keys.end()));
-}
-
 auto numOrderings = 0ull;
 auto numBest = 0;
 string bestOrder;
 int bestFar = 999999999;
 
-vector<vector<map<vector<int>, int>>> memos(26,
-                                            vector<map<vector<int>, int>>(26));
+map<string, int> memos;
+map<string, char> memoOrder;
 
 pair<bool, int> backtrack(string &order, vector<bool> &found, int howFar) {
-  cout << order << endl;
   ++numOrderings;
   if (numOrderings % 100'000'000 == 0)
     cout << numOrderings << " nodes processed, order is " << order << endl;
@@ -152,8 +133,7 @@ pair<bool, int> backtrack(string &order, vector<bool> &found, int howFar) {
     }
     return {false, 0};
   }
-  //  if(order == "acfidg")
-  //    cout << " w";
+
   vector<int> nextChoice;
   for (int i = 0; i < found.size(); ++i) {
     if (found[i])
@@ -165,10 +145,18 @@ pair<bool, int> backtrack(string &order, vector<bool> &found, int howFar) {
   NEXTCHOICE:;
   }
 
-  if (!order.empty() &&
-      memos[nextChoice.size()][order.back() - 'a'].count(nextChoice)) {
-    auto newHowFar =
-        howFar + memos[nextChoice.size()][order.back() - 'a'][nextChoice];
+  if (numOrderings < 100 || order.size() <= 5) {
+    cout << order << "    "; // << endl;
+    for (auto n : nextChoice)
+      cout << char('a' + n);
+    cout << endl;
+  }
+
+  auto memoString = order;
+  if (!memoString.empty())
+    sort(memoString.begin(), memoString.end() - 1);
+  if (memos.count(memoString)) {
+    auto newHowFar = howFar + memos.at(memoString);
     if (newHowFar == bestFar)
       ++numBest;
 
@@ -179,64 +167,57 @@ pair<bool, int> backtrack(string &order, vector<bool> &found, int howFar) {
       cout << order << " with cost " << newHowFar << " after exploring "
            << numOrderings << endl;
     }
-    return {false, memos[nextChoice.size()][order.back() - 'a'][nextChoice]};
+    return {false, memos.at(memoString)};
   }
 
-  if (order.size() <= 3)
-    sort(nextChoice.begin(), nextChoice.end(), [&order](auto x, auto y) {
-      auto firstCoord = (order.empty() ? 0 : order.back() - 'a' + 1);
-      return distances[firstCoord][x] < distances[firstCoord][y];
-    });
+  //  if (order.size() <= 3)
+  //    sort(nextChoice.begin(), nextChoice.end(), [&order](auto x, auto y) {
+  //      auto firstCoord = (order.empty() ? 0 : order.back() - 'a' + 1);
+  //      return distances[firstCoord][x] < distances[firstCoord][y];
+  //    });
 
-  if (order.empty()) {
-    for (auto n : nextChoice)
-      cout << char(n + 'a');
-    cout << " <--- search order for first key\n";
-  }
-  int bestExtension = 999999999;
-
-  auto bound = 0;
-  auto bound2 = 0;
+  //  auto bound = 0;
+  //  auto bound2 = 0;
   //  if(order == "agbfceidhmlknj")
   //    cout << "break\n";
-  if (!order.empty() && found.size() - order.size() >= 35) {
-    auto j = order.back();
-    auto min1 = 9999;
-    auto min2 = 9999;
-    for (int i = 0; i < found.size(); ++i) {
-      if (found[i])
-        continue;
-      auto dist = distances[j - 'a' + 1][i];
-      if (dist < min1) {
-        min2 = min1;
-        min1 = dist;
-      } else if (dist < min2)
-        min2 = dist;
-    }
-    bound = min1 - 2 * min2;
-    //    cout << "+" << min1 << " -2*" << min2 << endl;
-    for (int j2 = 0; j2 < found.size(); ++j2) {
-      if (found[j2])
-        continue;
-      min1 = 9999;
-      min2 = 9999;
-      for (int i = 0; i < found.size(); ++i) {
-        if (found[i] && i != order.back() - 'a')
-          continue;
-        auto dist = distances[j2 + 1][i];
-        if (dist < min1) {
-          min2 = min1;
-          min1 = dist;
-        } else if (dist < min2)
-          min2 = dist;
-      }
-      //      cout << "+" << min1 << " +" << min2 << endl;
-      assert(min2 < 9999);
-      bound += min1 + min2;
-    }
-    bound /= 2;
-    //    cout << "/2 = " << bound << endl;
-  }
+  //  if (!order.empty() && found.size() - order.size() >= 35) {
+  //    auto j = order.back();
+  //    auto min1 = 9999;
+  //    auto min2 = 9999;
+  //    for (int i = 0; i < found.size(); ++i) {
+  //      if (found[i])
+  //        continue;
+  //      auto dist = distances[j - 'a' + 1][i];
+  //      if (dist < min1) {
+  //        min2 = min1;
+  //        min1 = dist;
+  //      } else if (dist < min2)
+  //        min2 = dist;
+  //    }
+  //    bound = min1 - 2 * min2;
+  //    //    cout << "+" << min1 << " -2*" << min2 << endl;
+  //    for (int j2 = 0; j2 < found.size(); ++j2) {
+  //      if (found[j2])
+  //        continue;
+  //      min1 = 9999;
+  //      min2 = 9999;
+  //      for (int i = 0; i < found.size(); ++i) {
+  //        if (found[i] && i != order.back() - 'a')
+  //          continue;
+  //        auto dist = distances[j2 + 1][i];
+  //        if (dist < min1) {
+  //          min2 = min1;
+  //          min1 = dist;
+  //        } else if (dist < min2)
+  //          min2 = dist;
+  //      }
+  //      //      cout << "+" << min1 << " +" << min2 << endl;
+  //      assert(min2 < 9999);
+  //      bound += min1 + min2;
+  //    }
+  //    bound /= 2;
+  //    //    cout << "/2 = " << bound << endl;
+  //  }
   //  else if (!order.empty()) {
   //    for (int j = 0; j < found.size(); ++j) {
   //      if (found[j])
@@ -255,12 +236,20 @@ pair<bool, int> backtrack(string &order, vector<bool> &found, int howFar) {
   //  }
   //  cout << "=" << bound2 << endl;
   //      assert(bound >= bound2);
-  bound = max(bound, bound2);
+  //  bound = max(bound, bound2);
 
-  if (howFar + bound > bestFar)
-    return {true, bestExtension};
+  //  if (howFar + bound > bestFar)
+  //    return {true, bestExtension};
 
+  //  if (order.empty()) {
+  //    for (auto n : nextChoice)
+  //      cout << char(n + 'a');
+  //    cout << " <--- search order for first key\n";
+  //  }
+  int bestExtension = 999999999;
+  char bestChar = ' ';
   bool wePruned = false;
+  assert(!nextChoice.empty());
   for (auto i : nextChoice) {
     //    auto oldFound = found;
     //    for (auto x : forFree.at(i + 'a'))
@@ -273,25 +262,52 @@ pair<bool, int> backtrack(string &order, vector<bool> &found, int howFar) {
 
     auto [theyPruned, extension] = backtrack(order, found, newHowFar);
     extension += thisStep;
+    if (extension < bestExtension) {
+      bestExtension = extension;
+      bestChar = order.back();
+    }
     wePruned |= theyPruned;
     order.pop_back();
     //    found = oldFound;
     found[i] = false;
-    if (extension < bestExtension)
-      bestExtension = extension;
+    assert(bestExtension < 999999999);
   }
-  if (!wePruned && !order.empty() && bestExtension < 999999999)
-    memos[nextChoice.size()][order.back() - 'a'][nextChoice] = bestExtension;
-  assert(bestExtension >= bound);
+  if (!wePruned && bestExtension < 999999999) {
+    memos[memoString] = bestExtension;
+    memoOrder[memoString] = bestChar;
+  }
+  //  assert(bestExtension >= bound);
   return {wePruned, bestExtension};
 }
 } // namespace
 
 map<char, Vertex> positions;
 
+int calculateDistance(const string &s) {
+  auto d = 0;
+  char last = 'a' - 1;
+  for (auto c : s) {
+    //    cout << last << " -> " << c << " = " << distances[last-'a'+1][c-'a']
+    //    << endl;
+    d += distances[last - 'a' + 1][c - 'a'];
+    last = c;
+  }
+  return d;
+}
+
+void showDistance(string s) {
+  auto mutateOrder = s;
+  while (mutateOrder.size() < maxKey - 'a' + 1) {
+    sort(mutateOrder.begin(), mutateOrder.end() - 1);
+    mutateOrder.push_back(memoOrder[mutateOrder]);
+    s.push_back(mutateOrder.back());
+  }
+  cout << s << " has distance " << calculateDistance(s) << endl;
+}
+
 void day18() {
   auto star2 = 0;
-  //    ifstream ifile("../day18.txt");
+  //      ifstream ifile("../day18.txt");
   //        istringstream ifile("########################\n"
   //                            "#f.D.E.e.C.b.A.@.a.B.c.#\n"
   //                            "######################.#\n"
@@ -379,13 +395,12 @@ void day18() {
   cout << numOrderings << " nodes explored.\n";
   cout << numBest << " equivalent paths.\n";
   cout << "Best order was " << bestOrder << endl;
-  bestFar = 0;
 
-  //  for (auto last = 'a'; last <= maxKey; ++last)
-  //    tryLast(last);
   cout << "Day 18 star 1 = " << star1 << "\n";
   cout << "Day 18 star 2 = " << star2 << "\n";
-}
+  showDistance(bestOrder);
+  //  showDistance("afbjgnhdloepcikm");
+} // not 4530, not 4550
 // xkvncotfhaegqyzbusdiwpjlrm with cost 5070 after exploring 27
 // xkvncotfhaegqybzus with cost 4842 after exploring 67
 // xkvncofhaegqybzuts with cost 4830 after exploring 282499
