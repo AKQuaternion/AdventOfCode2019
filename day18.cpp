@@ -52,33 +52,36 @@ using Vertex = pair<int, int>;
 
 map<Vertex, vector<Vertex>> edges;
 map<char, Vertex> positionOf;
+
 char maxKey = 'a';
 
-auto bfs(string order) {
-  vector<pair<char, int>> result;
+auto bfs(const string &order, const vector<Vertex> &robots) {
+  vector<tuple<int, char, int>> result; // robot index, key, distance
   assert(!order.empty());
   auto ch = order.back();
-  set<Vertex> visited;
-  queue<pair<Vertex, int>> q;
-  q.push({positionOf[ch], 0});
-  while (!q.empty()) {
-    //    auto [node, dist] = q.front();
-    auto p = q.front();
-    auto node = p.first;
-    auto dist = p.second; // just for debugging
-    q.pop();
-    if (visited.count(node))
-      continue;
-    visited.insert(node);
-    ch = grid[node.first][node.second];
-    if (islower(ch) && order.find(ch) == string::npos) {
-      result.emplace_back(ch, dist);
+  for (int robot = 0; robot < robots.size(); ++robot) {
+    set<Vertex> visited;
+    queue<pair<Vertex, int>> q;
+    q.push({robots[robot], 0});
+    while (!q.empty()) {
+      //    auto [node, dist] = q.front();
+      auto p = q.front();
+      auto node = p.first;
+      auto dist = p.second; // just for debugging
+      q.pop();
+      if (visited.count(node))
+        continue;
+      visited.insert(node);
+      ch = grid[node.first][node.second];
+      if (islower(ch) && order.find(ch) == string::npos) {
+        result.emplace_back(robot, ch, dist);
+      }
+      if (isupper(ch) && order.find(tolower(ch)) == string::npos)
+        continue;
+      for (auto nbr : edges[node])
+        if (visited.count(nbr) == 0)
+          q.push({nbr, dist + 1});
     }
-    if (isupper(ch) && order.find(tolower(ch)) == string::npos)
-      continue;
-    for (auto nbr : edges[node])
-      if (visited.count(nbr) == 0)
-        q.push({nbr, dist + 1});
   }
   return result;
 }
@@ -89,7 +92,7 @@ int bestFar = 999999999;
 map<string, int> memos;
 map<string, char> memoOrder;
 
-int backtrack(string &order, int howFar) {
+int backtrack(string &order, vector<Vertex> &robots, int howFar) {
   ++numNodesExplored;
 
   auto memoString = order;
@@ -105,12 +108,12 @@ int backtrack(string &order, int howFar) {
     return memos.at(memoString);
   }
 
-  auto possibleNextChoices = bfs(order);
+  auto possibleNextChoices = bfs(order, robots);
 
   if (numNodesExplored < 100 || order.size() <= 5) {
-    cout << order << "    "; // << endl;
-    for (auto [n, dist] : possibleNextChoices)
-      cout << n << ":" << dist << ",  ";
+    cout << std::setw(5) << howFar << " " << order << "    "; // << endl;
+    for (auto [r, n, dist] : possibleNextChoices)
+      cout << "r" << r << "@" << n << ":" << dist << ",  ";
     cout << endl;
   }
 
@@ -118,17 +121,19 @@ int backtrack(string &order, int howFar) {
   char bestChar = '\0';
   bool first = true;
 
-  for (auto [n, dist] : possibleNextChoices) {
+  for (auto [r, n, dist] : possibleNextChoices) {
     auto newHowFar = howFar + dist;
     order.push_back(n);
-
-    auto extension = dist + backtrack(order, newHowFar);
+    auto oldRobotPos = robots[r];
+    robots[r] = positionOf[n];
+    auto extension = dist + backtrack(order, robots, newHowFar);
     if (first || extension < bestExtension) {
       first = false;
       bestExtension = extension;
       bestChar = order.back();
     }
     order.pop_back();
+    robots[r] = oldRobotPos;
   }
   if (first)
     if (howFar < bestFar) {
@@ -198,20 +203,35 @@ void day18() {
   //                          "########.########\n"
   //                          "#l.F..d...h..C.m#\n"
   //                          "#################");
+  //    istringstream ifile("###############\n"
+  //                        "#d.ABC.#.....a#\n"
+  //                        "######@#@######\n"
+  //                        "###############\n"
+  //                        "######@#@######\n"
+  //                        "#b.....#.....c#\n"
+  //                        "###############");
+  //    istringstream ifile("#############\n"
+  //                        "#DcBa.#.GhKl#\n"
+  //                        "#.###@#@#I###\n"
+  //                        "#e#d#####j#k#\n"
+  //                        "###C#@#@###J#\n"
+  //                        "#fEbA.#.FgHi#\n"
+  //                        "#############");
   string line;
-
   while (getline(ifile, line)) {
     grid.push_back(line);
   }
 
+  vector<Vertex> robots;
   for (int r = 0; r < grid.size(); ++r)
     for (int c = 0; c < grid[r].size(); ++c) {
-      if (islower(grid[r][c]))
-        maxKey = max(grid[r][c], maxKey);
       if (grid[r][c] == '#')
         continue;
-      if (grid[r][c] != '.' && !isupper(grid[r][c])) // key or @
+      if (islower(grid[r][c])) { // key
         positionOf[grid[r][c]] = {r, c};
+        maxKey = max(grid[r][c], maxKey);
+      } else if (grid[r][c] == '@')
+        robots.emplace_back(r, c);
       auto putEdge = [&](int y, int x) {
         if (grid[y][x] != '#')
           edges[{r, c}].push_back({y, x});
@@ -235,7 +255,7 @@ void day18() {
   cout << "Max key is " << maxKey << endl;
 
   string order{"@"};
-  auto star1 = backtrack(order, 0);
+  auto star1 = backtrack(order, robots, 0);
   cout << numNodesExplored << " nodes explored.\n";
 
   cout << "Day 18 star 1 = " << star1 << "\n";
