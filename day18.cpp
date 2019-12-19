@@ -52,11 +52,12 @@ using Vertex = pair<int, int>;
 
 map<Vertex, vector<Vertex>> edges;
 map<char, string> mustBefore;
+map<Vertex, Vertex> seenBy;
 set<Vertex> visited;
 char maxKey = 'a';
 
 void dfs(Vertex node, string &doors, string &keys, string &all) {
-  visited.insert(node);
+  //!!! Try passing by value, make sure still works
   auto ch = grid[node.first][node.second];
   if (islower(ch)) {
     mustBefore[ch] = doors + keys;
@@ -71,7 +72,15 @@ void dfs(Vertex node, string &doors, string &keys, string &all) {
     //    cout << "A: " << all << endl;
   }
   for (auto nbr : edges[node]) {
-    if (visited.count(nbr) == 0) {
+    if (nbr == seenBy[node]) // should assert this happens, except for root
+      continue;
+    if (seenBy.count(nbr) != 0) {
+      if (visited.count(nbr))
+        cout << "Not a tree (but still a DAG" << endl;
+      else
+        cout << "Found a cycle, not a DAG!" << endl;
+    } else {
+      seenBy[nbr] = node;
       dfs(nbr, doors, keys, all);
     }
   }
@@ -83,6 +92,7 @@ void dfs(Vertex node, string &doors, string &keys, string &all) {
     keys.pop_back();
     all.pop_back();
   }
+  visited.insert(node);
 }
 
 // map<char, map<char, int>> distances;
@@ -106,178 +116,78 @@ void dfsDistances(char from, Vertex node, int dist) {
   }
 }
 
-auto numOrderings = 0ull;
-auto numBest = 0;
-string bestOrder;
+auto numNodesExplored = 0ull;
 int bestFar = 999999999;
 
 map<string, int> memos;
 map<string, char> memoOrder;
 
-pair<bool, int> backtrack(string &order, vector<bool> &found, int howFar) {
-  ++numOrderings;
-  if (numOrderings % 100'000'000 == 0)
-    cout << numOrderings << " nodes processed, order is " << order << endl;
-  if (order.size() == maxKey - 'a' + 1) {
-    //  if (std::all_of(found.begin(), found.end(), [](auto x) { return x; })) {
-    //    cout << order << endl;
-    if (howFar == bestFar)
-      ++numBest;
-
-    else if (howFar < bestFar) {
-      numBest = 1;
-      bestFar = howFar;
-      bestOrder = order;
-      cout << order << " with cost " << howFar << " after exploring "
-           << numOrderings << endl;
-    }
-    return {false, 0};
-  }
-
-  vector<int> nextChoice;
-  for (int i = 0; i < found.size(); ++i) {
-    if (found[i])
-      continue;
-    for (auto l : mustBefore[i + 'a'])
-      if (!found[l - 'a'])
-        goto NEXTCHOICE;
-    nextChoice.push_back(i);
-  NEXTCHOICE:;
-  }
-
-  if (numOrderings < 100 || order.size() <= 5) {
-    cout << order << "    "; // << endl;
-    for (auto n : nextChoice)
-      cout << char('a' + n);
-    cout << endl;
-  }
+int backtrack(string &order, vector<bool> &found, int howFar) {
+  ++numNodesExplored;
 
   auto memoString = order;
   if (!memoString.empty())
     sort(memoString.begin(), memoString.end() - 1);
   if (memos.count(memoString)) {
     auto newHowFar = howFar + memos.at(memoString);
-    if (newHowFar == bestFar)
-      ++numBest;
-
-    else if (newHowFar < bestFar) {
-      numBest = 1;
+    if (newHowFar < bestFar) {
       bestFar = newHowFar;
-      bestOrder = order;
       cout << order << " with cost " << newHowFar << " after exploring "
-           << numOrderings << endl;
+           << numNodesExplored << endl;
     }
-    return {false, memos.at(memoString)};
+    return memos.at(memoString);
   }
 
-  //  if (order.size() <= 3)
-  //    sort(nextChoice.begin(), nextChoice.end(), [&order](auto x, auto y) {
-  //      auto firstCoord = (order.empty() ? 0 : order.back() - 'a' + 1);
-  //      return distances[firstCoord][x] < distances[firstCoord][y];
-  //    });
+  vector<int> possibleNextChoices;
+  for (int i = 0; i < found.size(); ++i) {
+    if (found[i])
+      continue;
+    bool prereqs = true;
+    for (auto l : mustBefore.at(i + 'a'))
+      if (!found[l - 'a']) {
+        prereqs = false;
+        break;
+      }
+    if (prereqs)
+      possibleNextChoices.push_back(i);
+  }
 
-  //  auto bound = 0;
-  //  auto bound2 = 0;
-  //  if(order == "agbfceidhmlknj")
-  //    cout << "break\n";
-  //  if (!order.empty() && found.size() - order.size() >= 35) {
-  //    auto j = order.back();
-  //    auto min1 = 9999;
-  //    auto min2 = 9999;
-  //    for (int i = 0; i < found.size(); ++i) {
-  //      if (found[i])
-  //        continue;
-  //      auto dist = distances[j - 'a' + 1][i];
-  //      if (dist < min1) {
-  //        min2 = min1;
-  //        min1 = dist;
-  //      } else if (dist < min2)
-  //        min2 = dist;
-  //    }
-  //    bound = min1 - 2 * min2;
-  //    //    cout << "+" << min1 << " -2*" << min2 << endl;
-  //    for (int j2 = 0; j2 < found.size(); ++j2) {
-  //      if (found[j2])
-  //        continue;
-  //      min1 = 9999;
-  //      min2 = 9999;
-  //      for (int i = 0; i < found.size(); ++i) {
-  //        if (found[i] && i != order.back() - 'a')
-  //          continue;
-  //        auto dist = distances[j2 + 1][i];
-  //        if (dist < min1) {
-  //          min2 = min1;
-  //          min1 = dist;
-  //        } else if (dist < min2)
-  //          min2 = dist;
-  //      }
-  //      //      cout << "+" << min1 << " +" << min2 << endl;
-  //      assert(min2 < 9999);
-  //      bound += min1 + min2;
-  //    }
-  //    bound /= 2;
-  //    //    cout << "/2 = " << bound << endl;
-  //  }
-  //  else if (!order.empty()) {
-  //    for (int j = 0; j < found.size(); ++j) {
-  //      if (found[j])
-  //        continue;
-  //      auto minDistToj = 999999;
-  //      for (int i = 0; i < found.size(); ++i) {
-  //        if (i == j)
-  //          continue;
-  //        if (!found[i] || (order.back() == i + 'a')) {
-  //          minDistToj = min(minDistToj, distances[i + 1][j]);
-  //        }
-  //      }
-  //      bound2 += minDistToj;
-  //      //      cout << "+" << minDistToj << endl;
-  //    }
-  //  }
-  //  cout << "=" << bound2 << endl;
-  //      assert(bound >= bound2);
-  //  bound = max(bound, bound2);
+  if (numNodesExplored < 100 || order.size() <= 5) {
+    cout << order << "    "; // << endl;
+    for (auto n : possibleNextChoices)
+      cout << char('a' + n);
+    cout << endl;
+  }
 
-  //  if (howFar + bound > bestFar)
-  //    return {true, bestExtension};
+  int bestExtension = 0;
+  char bestChar = '\0';
+  bool first = true;
 
-  //  if (order.empty()) {
-  //    for (auto n : nextChoice)
-  //      cout << char(n + 'a');
-  //    cout << " <--- search order for first key\n";
-  //  }
-  int bestExtension = 999999999;
-  char bestChar = ' ';
-  bool wePruned = false;
-  assert(!nextChoice.empty());
-  for (auto i : nextChoice) {
-    //    auto oldFound = found;
-    //    for (auto x : forFree.at(i + 'a'))
-    //      found[x - 'a'] = true;
+  for (auto i : possibleNextChoices) {
     found[i] = true;
     auto thisStep = (order.empty() ? distances[0][i]
                                    : distances[order.back() - 'a' + 1][i]);
     auto newHowFar = howFar + thisStep;
     order.push_back('a' + i);
 
-    auto [theyPruned, extension] = backtrack(order, found, newHowFar);
-    extension += thisStep;
-    if (extension < bestExtension) {
+    auto extension = thisStep + backtrack(order, found, newHowFar);
+    if (first || extension < bestExtension) {
+      first = false;
       bestExtension = extension;
       bestChar = order.back();
     }
-    wePruned |= theyPruned;
     order.pop_back();
-    //    found = oldFound;
     found[i] = false;
-    assert(bestExtension < 999999999);
   }
-  if (!wePruned && bestExtension < 999999999) {
-    memos[memoString] = bestExtension;
-    memoOrder[memoString] = bestChar;
-  }
-  //  assert(bestExtension >= bound);
-  return {wePruned, bestExtension};
+  if (first)
+    if (howFar < bestFar) {
+      bestFar = howFar;
+      cout << order << " with cost " << howFar << " after exploring "
+           << numNodesExplored << endl;
+    }
+  memos[memoString] = bestExtension;
+  memoOrder[memoString] = bestChar;
+  return bestExtension;
 }
 } // namespace
 
@@ -295,11 +205,14 @@ int calculateDistance(const string &s) {
   return d;
 }
 
-void showDistance(string s) {
+void showDistance(string s) { // stop at null!!!!
   auto mutateOrder = s;
-  while (mutateOrder.size() < maxKey - 'a' + 1) {
-    sort(mutateOrder.begin(), mutateOrder.end() - 1);
+  while (true) {
+    if (!mutateOrder.empty())
+      sort(mutateOrder.begin(), mutateOrder.end() - 1);
     mutateOrder.push_back(memoOrder[mutateOrder]);
+    if (mutateOrder.back() == '\0')
+      break;
     s.push_back(mutateOrder.back());
   }
   cout << s << " has distance " << calculateDistance(s) << endl;
@@ -307,35 +220,35 @@ void showDistance(string s) {
 
 void day18() {
   auto star2 = 0;
-  //      ifstream ifile("../day18.txt");
-  //        istringstream ifile("########################\n"
-  //                            "#f.D.E.e.C.b.A.@.a.B.c.#\n"
-  //                            "######################.#\n"
-  //                            "#d.....................#\n"
-  //                            "########################");
+  ifstream ifile("../day18.txt");
+  //  istringstream ifile("########################\n"
+  //                      "#f.D.E.e.C.b.A.@.a.B.c.#\n"
+  //                      "######################.#\n"
+  //                      "#d.....................#\n"
+  //                      "########################");
   //
+  //  istringstream ifile("########################\n"
+  //                      "#...............b.C.D.f#\n"
+  //                      "#.######################\n"
+  //                      "#.....@.a.B.c.d.A.e.F.g#\n"
+  //                      "########################");
+
   //        istringstream ifile("########################\n"
-  //                            "#...............b.C.D.f#\n"
-  //                            "#.######################\n"
-  //                            "#.....@.a.B.c.d.A.e.F.g#\n"
+  //                            "#@..............ac.GI.b#\n"
+  //                            "###d#e#f################\n"
+  //                            "###A#B#C################\n"
+  //                            "###g#h#i################\n"
   //                            "########################");
 
-  //      istringstream ifile("########################\n"
-  //                          "#@..............ac.GI.b#\n"
-  //                          "###d#e#f################\n"
-  //                          "###A#B#C################\n"
-  //                          "###g#h#i################\n"
-  //                          "########################");
-
-  istringstream ifile("#################\n"
-                      "#i.G..c...e..H.p#\n"
-                      "########.########\n"
-                      "#j.A..b...f..D.o#\n"
-                      "########@########\n"
-                      "#k.E..a...g..B.n#\n"
-                      "########.########\n"
-                      "#l.F..d...h..C.m#\n"
-                      "#################");
+  //    istringstream ifile("#################\n"
+  //                        "#i.G..c...e..H.p#\n"
+  //                        "########.########\n"
+  //                        "#j.A..b...f..D.o#\n"
+  //                        "########@########\n"
+  //                        "#k.E..a...g..B.n#\n"
+  //                        "########.########\n"
+  //                        "#l.F..d...h..C.m#\n"
+  //                        "#################");
   string line;
 
   while (getline(ifile, line)) {
@@ -368,6 +281,7 @@ void day18() {
   string keys;
   string all{"@"};
   dfs(positions['@'], doors, keys, all);
+
   cout << "Max key is " << maxKey << endl;
   //  for (auto [c, s] : mustBefore)
   //    cout << c << " after " << s << endl;
@@ -391,26 +305,24 @@ void day18() {
 
   string order;
   vector<bool> found(maxKey - 'a' + 1);
-  auto [pruned, star1] = backtrack(order, found, 0);
-  cout << numOrderings << " nodes explored.\n";
-  cout << numBest << " equivalent paths.\n";
-  cout << "Best order was " << bestOrder << endl;
+  auto star1 = backtrack(order, found, 0);
+  cout << numNodesExplored << " nodes explored.\n";
 
   cout << "Day 18 star 1 = " << star1 << "\n";
   cout << "Day 18 star 2 = " << star2 << "\n";
-  showDistance(bestOrder);
+  showDistance("");
   //  showDistance("afbjgnhdloepcikm");
 } // not 4530, not 4550
-// xkvncotfhaegqyzbusdiwpjlrm with cost 5070 after exploring 27
-// xkvncotfhaegqybzus with cost 4842 after exploring 67
-// xkvncofhaegqybzuts with cost 4830 after exploring 282499
-// xkvncohaegqybzutfs with cost 4814 after exploring 471861
-// xkvncohaegqybzuts with cost 4802 after exploring 471863
-// xkvnchaegqybzuotfs with cost 4670 after exploring 2901767
-// xkvnchaegqybzuots with cost 4658 after exploring 2901769
-// xkvnhaegqybzucotfs with cost 4574 after exploring 40560518
-// xkvnhaegqybzucots with cost 4562 after exploring 40560520
-// xvnhkaegqybzucots with cost 4558 after exploring 1280535894
+  // xkvncotfhaegqyzbusdiwpjlrm with cost 5070 after exploring 27
+  // xkvncotfhaegqybzus with cost 4842 after exploring 67
+  // xkvncofhaegqybzuts with cost 4830 after exploring 282499
+  // xkvncohaegqybzutfs with cost 4814 after exploring 471861
+  // xkvncohaegqybzuts with cost 4802 after exploring 471863
+  // xkvnchaegqybzuotfs with cost 4670 after exploring 2901767
+  // xkvnchaegqybzuots with cost 4658 after exploring 2901769
+  // xkvnhaegqybzucotfs with cost 4574 after exploring 40560518
+  // xkvnhaegqybzucots with cost 4562 after exploring 40560520
+  // xvnhkaegqybzucots with cost 4558 after exploring 1280535894
 
 // Without sorting:
 // abcdefgh <--- search order for first key
