@@ -132,7 +132,8 @@ int bestFar = 999999999;
 vector<vector<map<vector<int>, int>>> memos(26,
                                             vector<map<vector<int>, int>>(26));
 
-int backtrack(string &order, vector<bool> &found, int howFar) {
+pair<bool, int> backtrack(string &order, vector<bool> &found, int howFar) {
+  cout << order << endl;
   ++numOrderings;
   if (numOrderings % 100'000'000 == 0)
     cout << numOrderings << " nodes processed, order is " << order << endl;
@@ -149,7 +150,7 @@ int backtrack(string &order, vector<bool> &found, int howFar) {
       cout << order << " with cost " << howFar << " after exploring "
            << numOrderings << endl;
     }
-    return 0;
+    return {false, 0};
   }
   //  if(order == "acfidg")
   //    cout << " w";
@@ -164,30 +165,28 @@ int backtrack(string &order, vector<bool> &found, int howFar) {
   NEXTCHOICE:;
   }
 
-  //  if(!order.empty() && order.back()=='g' && nextChoice == vector<int>{1,4})
-  //    cout << " x";
+  if (!order.empty() &&
+      memos[nextChoice.size()][order.back() - 'a'].count(nextChoice)) {
+    auto newHowFar =
+        howFar + memos[nextChoice.size()][order.back() - 'a'][nextChoice];
+    if (newHowFar == bestFar)
+      ++numBest;
 
-  //  if (!order.empty() &&
-  //      memos[nextChoice.size()][order.back() - 'a'].count(nextChoice)) {
-  //    auto newHowFar =
-  //        howFar + memos[nextChoice.size()][order.back() - 'a'][nextChoice];
-  //    if (newHowFar == bestFar)
-  //      ++numBest;
-  //
-  //    else if (newHowFar < bestFar) {
-  //      numBest = 1;
-  //      bestFar = newHowFar;
-  //      bestOrder = order;
-  //      cout << order << " with cost " << newHowFar << " after exploring "
-  //           << numOrderings << endl;
-  //    }
-  //    return memos[nextChoice.size()][order.back() - 'a'][nextChoice];
-  //  }
+    else if (newHowFar < bestFar) {
+      numBest = 1;
+      bestFar = newHowFar;
+      bestOrder = order;
+      cout << order << " with cost " << newHowFar << " after exploring "
+           << numOrderings << endl;
+    }
+    return {false, memos[nextChoice.size()][order.back() - 'a'][nextChoice]};
+  }
 
-  sort(nextChoice.begin(), nextChoice.end(), [&order](auto x, auto y) {
-    auto firstCoord = (order.empty() ? 0 : order.back() - 'a' + 1);
-    return distances[firstCoord][x] < distances[firstCoord][y];
-  });
+  if (order.size() <= 3)
+    sort(nextChoice.begin(), nextChoice.end(), [&order](auto x, auto y) {
+      auto firstCoord = (order.empty() ? 0 : order.back() - 'a' + 1);
+      return distances[firstCoord][x] < distances[firstCoord][y];
+    });
 
   if (order.empty()) {
     for (auto n : nextChoice)
@@ -200,7 +199,7 @@ int backtrack(string &order, vector<bool> &found, int howFar) {
   auto bound2 = 0;
   //  if(order == "agbfceidhmlknj")
   //    cout << "break\n";
-  if (!order.empty() && found.size() - order.size() >= 2) {
+  if (!order.empty() && found.size() - order.size() >= 35) {
     auto j = order.back();
     auto min1 = 9999;
     auto min2 = 9999;
@@ -238,29 +237,30 @@ int backtrack(string &order, vector<bool> &found, int howFar) {
     bound /= 2;
     //    cout << "/2 = " << bound << endl;
   }
-  if (!order.empty()) {
-    for (int j = 0; j < found.size(); ++j) {
-      if (found[j])
-        continue;
-      auto minDistToj = 999999;
-      for (int i = 0; i < found.size(); ++i) {
-        if (i == j)
-          continue;
-        if (!found[i] || (order.back() == i + 'a')) {
-          minDistToj = min(minDistToj, distances[i + 1][j]);
-        }
-      }
-      bound2 += minDistToj;
-      //      cout << "+" << minDistToj << endl;
-    }
-  }
+  //  else if (!order.empty()) {
+  //    for (int j = 0; j < found.size(); ++j) {
+  //      if (found[j])
+  //        continue;
+  //      auto minDistToj = 999999;
+  //      for (int i = 0; i < found.size(); ++i) {
+  //        if (i == j)
+  //          continue;
+  //        if (!found[i] || (order.back() == i + 'a')) {
+  //          minDistToj = min(minDistToj, distances[i + 1][j]);
+  //        }
+  //      }
+  //      bound2 += minDistToj;
+  //      //      cout << "+" << minDistToj << endl;
+  //    }
+  //  }
   //  cout << "=" << bound2 << endl;
   //      assert(bound >= bound2);
   bound = max(bound, bound2);
 
   if (howFar + bound > bestFar)
-    return bestExtension;
+    return {true, bestExtension};
 
+  bool wePruned = false;
   for (auto i : nextChoice) {
     //    auto oldFound = found;
     //    for (auto x : forFree.at(i + 'a'))
@@ -270,34 +270,28 @@ int backtrack(string &order, vector<bool> &found, int howFar) {
                                    : distances[order.back() - 'a' + 1][i]);
     auto newHowFar = howFar + thisStep;
     order.push_back('a' + i);
-    //    assert(bound - minDistance[order.back() - 'a'] >= 0);
-    int extension = bestExtension;
 
-    //    if (newHowFar == bestFar)
-    //      cout << "hmm\n";
-    //    if (newHowFar + bound < bestFar)
-    //    if (newHowFar < bestFar)
-    extension = thisStep + backtrack(order, found, newHowFar);
+    auto [theyPruned, extension] = backtrack(order, found, newHowFar);
+    extension += thisStep;
+    wePruned |= theyPruned;
     order.pop_back();
     //    found = oldFound;
     found[i] = false;
     if (extension < bestExtension)
       bestExtension = extension;
   }
-  //  if (!order.empty() && bestExtension < 999999999)
-  //    memos[nextChoice.size()][order.back() - 'a'][nextChoice] =
-  //    bestExtension;
+  if (!wePruned && !order.empty() && bestExtension < 999999999)
+    memos[nextChoice.size()][order.back() - 'a'][nextChoice] = bestExtension;
   assert(bestExtension >= bound);
-  return bestExtension;
+  return {wePruned, bestExtension};
 }
 } // namespace
 
 map<char, Vertex> positions;
 
 void day18() {
-  auto star1 = 0;
   auto star2 = 0;
-  ifstream ifile("../day19.txt");
+  //    ifstream ifile("../day18.txt");
   //        istringstream ifile("########################\n"
   //                            "#f.D.E.e.C.b.A.@.a.B.c.#\n"
   //                            "######################.#\n"
@@ -317,15 +311,15 @@ void day18() {
   //                          "###g#h#i################\n"
   //                          "########################");
 
-  //  istringstream ifile("#################\n"
-  //                      "#i.G..c...e..H.p#\n"
-  //                      "########.########\n"
-  //                      "#j.A..b...f..D.o#\n"
-  //                      "########@########\n"
-  //                      "#k.E..a...g..B.n#\n"
-  //                      "########.########\n"
-  //                      "#l.F..d...h..C.m#\n"
-  //                      "#################");
+  istringstream ifile("#################\n"
+                      "#i.G..c...e..H.p#\n"
+                      "########.########\n"
+                      "#j.A..b...f..D.o#\n"
+                      "########@########\n"
+                      "#k.E..a...g..B.n#\n"
+                      "########.########\n"
+                      "#l.F..d...h..C.m#\n"
+                      "#################");
   string line;
 
   while (getline(ifile, line)) {
@@ -381,7 +375,7 @@ void day18() {
 
   string order;
   vector<bool> found(maxKey - 'a' + 1);
-  star1 = backtrack(order, found, 0);
+  auto [pruned, star1] = backtrack(order, found, 0);
   cout << numOrderings << " nodes explored.\n";
   cout << numBest << " equivalent paths.\n";
   cout << "Best order was " << bestOrder << endl;
