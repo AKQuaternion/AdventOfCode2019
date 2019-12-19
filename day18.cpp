@@ -60,10 +60,10 @@ void dfs(Vertex node, string &doors, string &keys, string &all) {
   visited.insert(node);
   auto ch = grid[node.first][node.second];
   if (islower(ch)) {
+    mustBefore[ch] = doors + keys;
     keys += ch;
     all += ch;
     //    cout << "A: " << all << endl;
-    mustBefore[ch] = doors;
     forFree[ch] = keys;
     maxKey = max(maxKey, ch);
   }
@@ -134,8 +134,10 @@ vector<vector<map<vector<int>, int>>> memos(26,
 
 int backtrack(string &order, vector<bool> &found, int howFar) {
   ++numOrderings;
-  //  if (order.size() == maxKey - 'a' + 1) {
-  if (std::all_of(found.begin(), found.end(), [](auto x) { return x; })) {
+  if (numOrderings % 100'000'000 == 0)
+    cout << numOrderings << " nodes processed, order is " << order << endl;
+  if (order.size() == maxKey - 'a' + 1) {
+    //  if (std::all_of(found.begin(), found.end(), [](auto x) { return x; })) {
     //    cout << order << endl;
     if (howFar == bestFar)
       ++numBest;
@@ -149,7 +151,8 @@ int backtrack(string &order, vector<bool> &found, int howFar) {
     }
     return 0;
   }
-
+  //  if(order == "acfidg")
+  //    cout << " w";
   vector<int> nextChoice;
   for (int i = 0; i < found.size(); ++i) {
     if (found[i])
@@ -161,37 +164,108 @@ int backtrack(string &order, vector<bool> &found, int howFar) {
   NEXTCHOICE:;
   }
 
-  if (!order.empty() &&
-      memos[nextChoice.size()][order.back() - 'a'].count(nextChoice)) {
-    auto newHowFar =
-        howFar + memos[nextChoice.size()][order.back() - 'a'][nextChoice];
-    if (newHowFar == bestFar)
-      ++numBest;
+  //  if(!order.empty() && order.back()=='g' && nextChoice == vector<int>{1,4})
+  //    cout << " x";
 
-    else if (newHowFar < bestFar) {
-      numBest = 1;
-      bestFar = newHowFar;
-      bestOrder = order;
-      cout << order << " with cost " << newHowFar << " after exploring "
-           << numOrderings << endl;
-    }
-    return memos[nextChoice.size()][order.back() - 'a'][nextChoice];
-  }
+  //  if (!order.empty() &&
+  //      memos[nextChoice.size()][order.back() - 'a'].count(nextChoice)) {
+  //    auto newHowFar =
+  //        howFar + memos[nextChoice.size()][order.back() - 'a'][nextChoice];
+  //    if (newHowFar == bestFar)
+  //      ++numBest;
+  //
+  //    else if (newHowFar < bestFar) {
+  //      numBest = 1;
+  //      bestFar = newHowFar;
+  //      bestOrder = order;
+  //      cout << order << " with cost " << newHowFar << " after exploring "
+  //           << numOrderings << endl;
+  //    }
+  //    return memos[nextChoice.size()][order.back() - 'a'][nextChoice];
+  //  }
 
   sort(nextChoice.begin(), nextChoice.end(), [&order](auto x, auto y) {
     auto firstCoord = (order.empty() ? 0 : order.back() - 'a' + 1);
     return distances[firstCoord][x] < distances[firstCoord][y];
   });
 
+  if (order.empty()) {
+    for (auto n : nextChoice)
+      cout << char(n + 'a');
+    cout << " <--- search order for first key\n";
+  }
   int bestExtension = 999999999;
+
   auto bound = 0;
-  for (int i = 0; i < found.size(); ++i)
-    if (!found[i])
-      bound += minDistance[i];
+  auto bound2 = 0;
+  //  if(order == "agbfceidhmlknj")
+  //    cout << "break\n";
+  if (!order.empty() && found.size() - order.size() >= 2) {
+    auto j = order.back();
+    auto min1 = 9999;
+    auto min2 = 9999;
+    for (int i = 0; i < found.size(); ++i) {
+      if (found[i])
+        continue;
+      auto dist = distances[j - 'a' + 1][i];
+      if (dist < min1) {
+        min2 = min1;
+        min1 = dist;
+      } else if (dist < min2)
+        min2 = dist;
+    }
+    bound = min1 - 2 * min2;
+    //    cout << "+" << min1 << " -2*" << min2 << endl;
+    for (int j2 = 0; j2 < found.size(); ++j2) {
+      if (found[j2])
+        continue;
+      min1 = 9999;
+      min2 = 9999;
+      for (int i = 0; i < found.size(); ++i) {
+        if (found[i] && i != order.back() - 'a')
+          continue;
+        auto dist = distances[j2 + 1][i];
+        if (dist < min1) {
+          min2 = min1;
+          min1 = dist;
+        } else if (dist < min2)
+          min2 = dist;
+      }
+      //      cout << "+" << min1 << " +" << min2 << endl;
+      assert(min2 < 9999);
+      bound += min1 + min2;
+    }
+    bound /= 2;
+    //    cout << "/2 = " << bound << endl;
+  }
+  if (!order.empty()) {
+    for (int j = 0; j < found.size(); ++j) {
+      if (found[j])
+        continue;
+      auto minDistToj = 999999;
+      for (int i = 0; i < found.size(); ++i) {
+        if (i == j)
+          continue;
+        if (!found[i] || (order.back() == i + 'a')) {
+          minDistToj = min(minDistToj, distances[i + 1][j]);
+        }
+      }
+      bound2 += minDistToj;
+      //      cout << "+" << minDistToj << endl;
+    }
+  }
+  //  cout << "=" << bound2 << endl;
+  //      assert(bound >= bound2);
+  bound = max(bound, bound2);
+
+  if (howFar + bound > bestFar)
+    return bestExtension;
+
   for (auto i : nextChoice) {
-    auto oldFound = found;
-    for (auto x : forFree.at(i + 'a'))
-      found[x - 'a'] = true;
+    //    auto oldFound = found;
+    //    for (auto x : forFree.at(i + 'a'))
+    //      found[x - 'a'] = true;
+    found[i] = true;
     auto thisStep = (order.empty() ? distances[0][i]
                                    : distances[order.back() - 'a' + 1][i]);
     auto newHowFar = howFar + thisStep;
@@ -201,17 +275,19 @@ int backtrack(string &order, vector<bool> &found, int howFar) {
 
     //    if (newHowFar == bestFar)
     //      cout << "hmm\n";
-    if (newHowFar + bound < bestFar)
-      //    if (newHowFar < bestFar)
-      extension = thisStep + backtrack(order, found, newHowFar);
+    //    if (newHowFar + bound < bestFar)
+    //    if (newHowFar < bestFar)
+    extension = thisStep + backtrack(order, found, newHowFar);
     order.pop_back();
-    found = oldFound;
+    //    found = oldFound;
+    found[i] = false;
     if (extension < bestExtension)
       bestExtension = extension;
   }
-  if (!order.empty() && bestExtension != 999999999)
-    memos[nextChoice.size()][order.back() - 'a'][nextChoice] = bestExtension;
-
+  //  if (!order.empty() && bestExtension < 999999999)
+  //    memos[nextChoice.size()][order.back() - 'a'][nextChoice] =
+  //    bestExtension;
+  assert(bestExtension >= bound);
   return bestExtension;
 }
 } // namespace
@@ -221,35 +297,35 @@ map<char, Vertex> positions;
 void day18() {
   auto star1 = 0;
   auto star2 = 0;
-  //            ifstream ifile("../day19.txt");
-  //  istringstream ifile("########################\n"
-  //                      "#f.D.E.e.C.b.A.@.a.B.c.#\n"
-  //                      "######################.#\n"
-  //                      "#d.....................#\n"
-  //                      "########################");
+  ifstream ifile("../day19.txt");
+  //        istringstream ifile("########################\n"
+  //                            "#f.D.E.e.C.b.A.@.a.B.c.#\n"
+  //                            "######################.#\n"
+  //                            "#d.....................#\n"
+  //                            "########################");
   //
-  //    istringstream ifile("########################\n"
-  //                        "#...............b.C.D.f#\n"
-  //                        "#.######################\n"
-  //                        "#.....@.a.B.c.d.A.e.F.g#\n"
-  //                        "########################");
-  //
-  //  istringstream ifile("########################\n"
-  //                      "#@..............ac.GI.b#\n"
-  //                      "###d#e#f################\n"
-  //                      "###A#B#C################\n"
-  //                      "###g#h#i################\n"
-  //                      "########################");
+  //        istringstream ifile("########################\n"
+  //                            "#...............b.C.D.f#\n"
+  //                            "#.######################\n"
+  //                            "#.....@.a.B.c.d.A.e.F.g#\n"
+  //                            "########################");
 
-  istringstream ifile("#################\n"
-                      "#i.G..c...e..H.p#\n"
-                      "########.########\n"
-                      "#j.A..b...f..D.o#\n"
-                      "########@########\n"
-                      "#k.E..a...g..B.n#\n"
-                      "########.########\n"
-                      "#l.F..d...h..C.m#\n"
-                      "#################");
+  //      istringstream ifile("########################\n"
+  //                          "#@..............ac.GI.b#\n"
+  //                          "###d#e#f################\n"
+  //                          "###A#B#C################\n"
+  //                          "###g#h#i################\n"
+  //                          "########################");
+
+  //  istringstream ifile("#################\n"
+  //                      "#i.G..c...e..H.p#\n"
+  //                      "########.########\n"
+  //                      "#j.A..b...f..D.o#\n"
+  //                      "########@########\n"
+  //                      "#k.E..a...g..B.n#\n"
+  //                      "########.########\n"
+  //                      "#l.F..d...h..C.m#\n"
+  //                      "#################");
   string line;
 
   while (getline(ifile, line)) {
@@ -285,8 +361,8 @@ void day18() {
   cout << "Max key is " << maxKey << endl;
   //  for (auto [c, s] : mustBefore)
   //    cout << c << " after " << s << endl;
-  //  for (auto [c, s] : forFree)
-  //    cout << c << " forFree gives " << s << endl;
+  //    for (auto [c, s] : forFree)
+  //      cout << c << " forFree gives " << s << endl;
   for (auto [c, pos] : positions) {
     dfsDistances(c, pos, 0);
   }
@@ -317,25 +393,69 @@ void day18() {
   cout << "Day 18 star 2 = " << star2 << "\n";
 }
 // xkvncotfhaegqyzbusdiwpjlrm with cost 5070 after exploring 27
-// xkvncotfhaegqybzus with cost 4842 after exploring 64
-// xkvncofhaegqybzuts with cost 4830 after exploring 87677
-// xkvncohaegqybzutfs with cost 4814 after exploring 167418
-// xkvncohaegqybzuts with cost 4802 after exploring 167420
-// xkvnchaegqybzuotfs with cost 4670 after exploring 884616
-// xkvnchaegqybzuots with cost 4658 after exploring 884618
-// xkvnhaegqybzucotfs with cost 4574 after exploring 5969542
-// xkvnhaegqybzucots with cost 4562 after exploring 5969544
-// 5089249869
-// Day 18 star 1 = 4562
-// Day 18 star 2 = 0
-// Time required: 3177.78 seconds
+// xkvncotfhaegqybzus with cost 4842 after exploring 67
+// xkvncofhaegqybzuts with cost 4830 after exploring 282499
+// xkvncohaegqybzutfs with cost 4814 after exploring 471861
+// xkvncohaegqybzuts with cost 4802 after exploring 471863
+// xkvnchaegqybzuotfs with cost 4670 after exploring 2901767
+// xkvnchaegqybzuots with cost 4658 after exploring 2901769
+// xkvnhaegqybzucotfs with cost 4574 after exploring 40560518
+// xkvnhaegqybzucots with cost 4562 after exploring 40560520
+// xvnhkaegqybzucots with cost 4558 after exploring 1280535894
 
-// agbfceidhmlknjop with cost 150 after exploring 17
-// agbfceidlhmkn with cost 146 after exploring 3053
-// agbfciedlhmkn with cost 142 after exploring 241897
-// agbjfciedlhm with cost 138 after exploring 3945895
-// bfgncie with cost 136 after exploring 749482208
-// 4821189727
+// Without sorting:
+// abcdefgh <--- search order for first key
+// abcdefghijklmnop with cost 178 after exploring 17
+// abcdefghijopknlm with cost 176 after exploring 327
+// abcdefghipjoklmn with cost 174 after exploring 1027
+// abcdefghipjoknlm with cost 172 after exploring 1035
+// abcdefghklmnjoip with cost 170 after exploring 2338
+// abcdefghlmknipjo with cost 168 after exploring 3490
+// abcdefghlmknjoip with cost 166 after exploring 3500
+// abcdefghmlknipjo with cost 164 after exploring 4247
+// abcdefghmlknjoip with cost 162 after exploring 4257
+// abcdefgnhmlkipjo with cost 160 after exploring 7787
+// abcdefgnhmlkjoip with cost 158 after exploring 7797
+// abcdefognhmlkipj with cost 156 after exploring 18807
+// abcdefognhmlkjip with cost 154 after exploring 18810
+// abcdfognhmepijkl with cost 152 after exploring 76321
+// abcdfognhmlepijk with cost 150 after exploring 76388
+// abcdgnhmepifojkl with cost 148 after exploring 107498
+// abcdhmgnepifojkl with cost 144 after exploring 134429
+// abcefdlhmgnkjoip with cost 142 after exploring 156826
+// abdhgnciepfojklm with cost 140 after exploring 536267
+// abjcefdlhmgnkoip with cost 138 after exploring 1348505
+// abjdhgnciepfoklm with cost 136 after exploring 1409029
+// 23157377 nodes explored.
+// 1568 equivalent paths.
+// Best order was abjdhgnciepfoklm
 // Day 18 star 1 = 136
 // Day 18 star 2 = 0
-// Time required: 3553.35 seconds
+// Time required: 26.7047 seconds
+
+// With sorting
+// abfgcdeh <--- search order for first key
+// agbfceidhmlknjop with cost 150 after exploring 17
+// agbfceidlhmknjop with cost 146 after exploring 123
+// agbfciedlhmknjop with cost 142 after exploring 10853
+// agbjfciedlhmknop with cost 138 after exploring 97639
+// agdhbjfociepknlm with cost 136 after exploring 311472
+// 22365270 nodes explored.
+// 1568 equivalent paths.
+// Best order was agdhbjfociepknlm
+// Day 18 star 1 = 136
+// Day 18 star 2 = 0
+// Time required: 28.337 seconds
+
+// Max key is i
+// defa <--- search order for first key
+// defacigbh with cost 87 after exploring 10
+// deacfi with cost 85 after exploring 20
+// dacfi with cost 83 after exploring 74
+// acfidgb with cost 81 after exploring 230
+// 362 nodes explored.
+// 2 equivalent paths.
+// Best order was acfidgb
+// Day 18 star 1 = 81
+// Day 18 star 2 = 0
+// Time required: 0.000322427 seconds
