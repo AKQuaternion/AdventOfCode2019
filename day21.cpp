@@ -7,70 +7,49 @@
 #include "Intcode.hpp"
 
 #include <algorithm>
-#include <cmath>
-#include <cstdlib>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
-#include <map>
-#include <numeric>
-#include <queue>
-#include <set>
-#include <sstream>
 #include <string>
-#include <tuple>
-#include <utility>
 #include <vector>
-using std::abs;
-using std::ceil;
-using std::cout;
-using std::endl;
-using std::forward_as_tuple;
-using std::ifstream;
-using std::istream;
-using std::istringstream;
-using std::map;
-using std::max;
-using std::max_element;
-using std::min;
-using std::pair;
-using std::queue;
-using std::set;
-using std::sqrt;
-using std::string;
-using std::swap;
-using std::tie;
-using std::tuple;
-using std::vector;
-
-namespace {
-ifstream ifile("../day21.txt");
-Intcode i(ifile);
-} // namespace
 
 void day21() {
-  auto star1 = 0;
-  auto star2 = 0;
-  // T and J start false
-  // ABCD false if hole at 1234, true if ground
-  // AND X Y is Y &= X
-  // OR X Y is  Y |= X
-  // NOT X Y is Y = ~X
-  string program{""
-                 "NOT C T\n"
-                 "AND D T\n"
-                 "OR T J\n"
-                 "NOT A T\n" // if A is bad, jump
-                 "OR T J\n"
-                 "WALK\n"
-                 ""};
-  vector<long long> p;
-  copy(program.begin(), program.end(), std::back_inserter(p));
-  i.run(p);
-  auto out = i.getOutput();
-  for (auto n : out)
-    cout << n << endl;
-  string asciiOutput;
-  std::copy(out.begin(), out.end(), std::back_inserter(asciiOutput));
-  cout << asciiOutput;
+  std::ifstream ifile("../day21.txt");
+  Intcode i(ifile);
+
+  auto runASCII = [&](std::string_view s) {
+    i.reset();
+    std::vector<long long> p;
+    copy(s.begin(), s.end(), std::back_inserter(p));
+    i.run(p);
+    auto out = i.getOutput();
+    if (out.back() > 255)
+      return out.back();
+    std::string asciiOutput;
+    std::copy(out.begin(), out.end(), std::back_inserter(asciiOutput));
+    std::cout << asciiOutput;
+    return 0ll;
+  };
+
+  std::string program1{"NOT C J\n" // jump if a hole is three away and it's safe
+                       "AND D J\n" // @.. #
+                       "NOT A T\n" // jump if a hole is one away:
+                       "OR T J\n"  // @ ...
+                       "WALK\n"};
+
+  std::string program2{"NOT C T\n"
+                       "AND D T\n" // jump if a hole is three away
+                       "AND H T\n" // and it's safe to jump twice:
+                       "OR T J\n"  // @.. #...#.
+                       "NOT B T\n"
+                       "AND D T\n" // jump if a hole is two away:
+                       "OR T J\n"  // @. .#.....
+                       "NOT A T\n" // jump if a hole is one away:
+                       "OR T J\n"  // @ ........
+                       "RUN\n"};
+
+  auto star1 = runASCII(program1);
+  auto star2 = runASCII(program2);
+
+  std::cout << "Day 21 star 1 = " << star1 << "\n";
+  std::cout << "Day 21 star 2 = " << star2 << "\n";
 }
