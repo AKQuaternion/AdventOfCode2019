@@ -65,23 +65,23 @@ int main() {
   //  day2();
   //  day3();
   //  day4();
-  //  day5();
-  //  day6();
-  //  day7();
-  //  day8();
-  //  day9();
-  //  day10old();
-  //  day11();
-  //  day12();
-  //  day13();
-  //  day14();
-  //  day15();
-  //  day16();
-  //  day17();
-  //    day18();
-  // day19();
-  //  day20();
-  day21();
+                            //  day5();
+                            //  day6();
+                            //  day7();
+                            //  day8();
+                            //  day9();
+                            //  day10old();
+                            //  day11();
+                            //  day12();
+                            //  day13();
+                            //  day14();
+                            //    day15();
+                            //    day16();
+                            //    day17();
+  day18();
+  //   day19();
+  //    day20();
+  //  day21();
   double time2 = timesec();           // End time (sec)
   double elapsedtime = time2 - time1; // Elapsed (sec)
   std::cout << "Time required: " << elapsedtime << " seconds" << std::endl;
@@ -125,22 +125,5 @@ int main() {
 // Day 13 star 2 = 18509
 // Day 14 star 1 = 97422
 // Day 14 star 2 = 13108426
-
-// Intcode days:
-// Day 2 star 1 = 4138687
-// Day 2 star 2 = 6635
-// Day 5 star 1 = 16348437
-// Day 5 star 2 = 6959377
-// Day 7 star 1 = 273814
-// Day 7 star 2 = 34579864
-// Day 9 star 1 = 4288078517
-// Day 9 star 2 = 69256
-// Day 11 star 1 = 2511
-// **    **      ****  **    **      ****  **    **    ****    ******    ** **
-// **    **        **  **  **          **  **  **    **    **  **    **  ** **
-// ********        **  ****            **  ****      **        **    ** ********
-// **    **        **  **  **          **  **  **    **  ****  ******    ** **
-// **    **  **    **  **  **    **    **  **  **    **    **  **        ** **
-// **    **    ****    **    **    ****    **    **    ******  **        ** **
-// Day 13 star 1 = 376
-// Day 13 star 2 = 18509
+// Day 21 star 1 = 19355436
+// Day 21 star 2 = 1142618405

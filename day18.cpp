@@ -1,240 +1,125 @@
-//
-// Created by Chris Hartman on 12/17/19.
-//
-#include "Intcode.hpp"
-
-#include <cctype>
-
 #include <algorithm>
-#include <cmath>
-#include <cstdlib>
+#include <array>
+#include <cctype>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
-#include <iterator>
-#include <map>
-#include <memory>
-#include <numeric>
 #include <queue>
-#include <set>
-#include <sstream>
 #include <string>
 #include <tuple>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
-using std::abs;
-using std::ceil;
-using std::copy;
-using std::cout;
-using std::endl;
-using std::forward_as_tuple;
-using std::ifstream;
-using std::istream;
-using std::istringstream;
-using std::map;
-using std::max;
-using std::max_element;
-using std::min;
 using std::pair;
-using std::queue;
-using std::set;
-using std::sqrt;
 using std::string;
-using std::swap;
-using std::tie;
-using std::tuple;
 using std::vector;
 
 namespace {
 vector<string> grid;
 
-using Vertex = pair<int, int>;
+using Vertex = pair<short, short>;
 
-map<Vertex, vector<Vertex>> edges;
-map<char, Vertex> positionOf;
+std::unordered_map<int, vector<Vertex>> edges;
+std::array<Vertex, 26> keyPosition;
 
-char maxKey = 'a';
+int numKeys;
 
-auto bfs(const string &order, const vector<Vertex> &robots) {
-  vector<tuple<int, char, int>> result; // robot index, key, distance
-  assert(!order.empty());
-  auto ch = order.back();
+int pack(Vertex v) { return v.first << 16 | v.second; }
+
+// BFS from current robot positions to find possible next keys to pick up
+auto findChoices(const string &order, const vector<Vertex> &robots) {
+  vector<std::tuple<int, char, int>> result; // which robot, which key, distance
   for (int robot = 0; robot < robots.size(); ++robot) {
-    set<Vertex> visited;
-    queue<pair<Vertex, int>> q;
+    std::unordered_set<int> visited;
+    std::queue<pair<Vertex, int>> q; // node, distance
     q.push({robots[robot], 0});
     while (!q.empty()) {
-      //    auto [node, dist] = q.front();
-      auto p = q.front();
-      auto node = p.first;
-      auto dist = p.second; // just for debugging
+      auto [node, dist] = q.front();
       q.pop();
-      if (visited.count(node))
-        continue;
-      visited.insert(node);
-      ch = grid[node.first][node.second];
-      if (islower(ch) && order.find(ch) == string::npos) {
-        result.emplace_back(robot, ch, dist);
+      if (visited.count(pack(node)))
+        continue;                 // don't visit a node we've already seen
+      visited.insert(pack(node)); // mark this node as visited
+      auto ch = grid[node.first][node.second];
+      if (islower(ch) && order.find(ch) == string::npos) { // found a new key
+        result.emplace_back(robot, ch, dist); // This is a choice for next key
+        continue;                             // don't travel past a new key
       }
       if (isupper(ch) && order.find(tolower(ch)) == string::npos)
-        continue;
-      for (auto nbr : edges[node])
-        if (visited.count(nbr) == 0)
-          q.push({nbr, dist + 1});
+        continue; // don't travel past a door we don't have the key for
+      for (auto nbr : edges[pack(node)])
+        q.push({nbr, dist + 1}); // search neighbor nodes
     }
   }
   return result;
 }
 
 auto numNodesExplored = 0ull;
-int bestFar = 999999999;
+std::unordered_map<string, int> memos;
 
-map<string, int> memos;
-map<string, char> memoOrder;
-
-int backtrack(string &order, vector<Vertex> &robots, int howFar) {
+int fewestStepsToGetRestOfKeys(string &keysCollected,
+                               vector<Vertex> &robotPositions) {
+  if (keysCollected.size() == numKeys)
+    return 0;
   ++numNodesExplored;
 
-  auto memoString = order;
-  if (!memoString.empty())
-    sort(memoString.begin(), memoString.end() - 1);
-  if (memos.count(memoString)) {
-    auto newHowFar = howFar + memos.at(memoString);
-    if (newHowFar < bestFar) {
-      bestFar = newHowFar;
-      cout << order << " with cost " << newHowFar << " after exploring "
-           << numNodesExplored << endl;
-    }
-    return memos.at(memoString);
+  // the number of steps to finish depends only on the keys collected so far
+  // (not their order!) and the current robot positions. So we memoize that,
+  // saving it the first time we compute it, and reusing it.
+  auto memoString = keysCollected;
+  std::sort(memoString.begin(), memoString.end()); // removing order dependence
+  for (auto r : robotPositions)
+    memoString += grid[r.first][r.second]; // appending robot last key found
+
+  if (memos.count(memoString))   // if we've calculated this before
+    return memos.at(memoString); // just use the calculated value
+
+  auto possibleNextChoices = findChoices(keysCollected, robotPositions);
+  //
+  //  if (numNodesExplored < 100 || keysCollected.size() <= 5) {
+  //    std::cout << keysCollected << "    "; // << endl;
+  //    for (auto [r, n, dist] : possibleNextChoices)
+  //      std::cout << "r" << r << "@" << n << ":" << dist << ",  ";
+  //    std::cout << std::endl;
+  //  }
+
+  int bestNumSteps = 9999;
+
+  for (auto [robotIndex, key, distance] : possibleNextChoices) {
+    keysCollected.push_back(key);
+    auto oldRobotPos = robotPositions[robotIndex];
+    robotPositions[robotIndex] = keyPosition[key - 'a'];
+    auto stepsToFinish =
+        distance + fewestStepsToGetRestOfKeys(keysCollected, robotPositions);
+    bestNumSteps = std::min(bestNumSteps, stepsToFinish);
+    keysCollected.pop_back();
+    robotPositions[robotIndex] = oldRobotPos;
   }
-
-  auto possibleNextChoices = bfs(order, robots);
-
-  if (numNodesExplored < 100 || order.size() <= 5) {
-    cout << std::setw(5) << howFar << " " << order << "    "; // << endl;
-    for (auto [r, n, dist] : possibleNextChoices)
-      cout << "r" << r << "@" << n << ":" << dist << ",  ";
-    cout << endl;
-  }
-
-  int bestExtension = 0;
-  char bestChar = '\0';
-  bool first = true;
-
-  for (auto [r, n, dist] : possibleNextChoices) {
-    auto newHowFar = howFar + dist;
-    order.push_back(n);
-    auto oldRobotPos = robots[r];
-    robots[r] = positionOf[n];
-    auto extension = dist + backtrack(order, robots, newHowFar);
-    if (first || extension < bestExtension) {
-      first = false;
-      bestExtension = extension;
-      bestChar = order.back();
-    }
-    order.pop_back();
-    robots[r] = oldRobotPos;
-  }
-  if (first)
-    if (howFar < bestFar) {
-      bestFar = howFar;
-      cout << order << " with cost " << howFar << " after exploring "
-           << numNodesExplored << endl;
-    }
-  memos[memoString] = bestExtension;
-  memoOrder[memoString] = bestChar;
-  return bestExtension;
+  return memos[memoString] = bestNumSteps; // memoize and return
 }
 } // namespace
 
-// int calculateDistance(const string &s) {
-//  auto d = 0;
-//  char last = 'a' - 1;
-//  for (auto c : s) {
-//    //    cout << last << " -> " << c << " = " << distances[last-'a'+1][c-'a']
-//    //    << endl;
-//    d += distances[last - 'a' + 1][c - 'a'];
-//    last = c;
-//  }
-//  return d;
-//}
-
-void showDistance(string s) { // stop at null!!!!
-  auto mutateOrder = s;
-  while (true) {
-    if (!mutateOrder.empty())
-      sort(mutateOrder.begin(), mutateOrder.end() - 1);
-    mutateOrder.push_back(memoOrder[mutateOrder]);
-    if (mutateOrder.back() == '\0')
-      break;
-    s.push_back(mutateOrder.back());
-  }
-  //  cout << s << " has distance " << calculateDistance(s) << endl;
-}
-
 void day18() {
   auto star2 = 0;
-  ifstream ifile("../day18.txt");
-  //  istringstream ifile("########################\n"
-  //                      "#f.D.E.e.C.b.A.@.a.B.c.#\n"
-  //                      "######################.#\n"
-  //                      "#d.....................#\n"
-  //                      "########################");
-  //
-  //  istringstream ifile("########################\n"
-  //                      "#...............b.C.D.f#\n"
-  //                      "#.######################\n"
-  //                      "#.....@.a.B.c.d.A.e.F.g#\n"
-  //                      "########################");
+  std::ifstream ifile("../day18.txt");
 
-  //        istringstream ifile("########################\n"
-  //                            "#@..............ac.GI.b#\n"
-  //                            "###d#e#f################\n"
-  //                            "###A#B#C################\n"
-  //                            "###g#h#i################\n"
-  //                            "########################");
-
-  //      istringstream ifile("#################\n"
-  //                          "#i.G..c...e..H.p#\n"
-  //                          "########.########\n"
-  //                          "#j.A..b...f..D.o#\n"
-  //                          "########@########\n"
-  //                          "#k.E..a...g..B.n#\n"
-  //                          "########.########\n"
-  //                          "#l.F..d...h..C.m#\n"
-  //                          "#################");
-  //    istringstream ifile("###############\n"
-  //                        "#d.ABC.#.....a#\n"
-  //                        "######@#@######\n"
-  //                        "###############\n"
-  //                        "######@#@######\n"
-  //                        "#b.....#.....c#\n"
-  //                        "###############");
-  //    istringstream ifile("#############\n"
-  //                        "#DcBa.#.GhKl#\n"
-  //                        "#.###@#@#I###\n"
-  //                        "#e#d#####j#k#\n"
-  //                        "###C#@#@###J#\n"
-  //                        "#fEbA.#.FgHi#\n"
-  //                        "#############");
   string line;
-  while (getline(ifile, line)) {
+  while (getline(ifile, line))
     grid.push_back(line);
-  }
 
-  vector<Vertex> robots;
+  vector<Vertex> robotPositions;
   for (int r = 0; r < grid.size(); ++r)
     for (int c = 0; c < grid[r].size(); ++c) {
-      if (grid[r][c] == '#')
+      auto ch = grid[r][c];
+      if (ch == '#')
         continue;
-      if (islower(grid[r][c])) { // key
-        positionOf[grid[r][c]] = {r, c};
-        maxKey = max(grid[r][c], maxKey);
-      } else if (grid[r][c] == '@')
-        robots.emplace_back(r, c);
+      if (islower(ch)) { // key
+        keyPosition[ch - 'a'] = {r, c};
+        numKeys = std::max(numKeys, ch - 'a' + 1);
+      } else if (ch == '@')
+        robotPositions.emplace_back(r, c);
       auto putEdge = [&](int y, int x) {
         if (grid[y][x] != '#')
-          edges[{r, c}].push_back({y, x});
+          edges[pack({r, c})].push_back({y, x});
       };
       putEdge(r - 1, c);
       putEdge(r + 1, c);
@@ -242,91 +127,10 @@ void day18() {
       putEdge(r, c - 1);
     }
 
-  //  for(auto [e,v]: edges) {
-  //    cout << e.first << "," << e.second << " --> ";
-  //    for(auto [y,x]:v)
-  //      cout << y << "," << x << " ";
-  //    cout << endl;
-  //  }
-  string doors;
-  string keys;
-  string all{"@"};
+  string keysCollected;
+  auto star1 = fewestStepsToGetRestOfKeys(keysCollected, robotPositions);
+  std::cout << numNodesExplored << " nodes explored.\n";
 
-  cout << "Max key is " << maxKey << endl;
-
-  string order{"@"};
-  auto star1 = backtrack(order, robots, 0);
-  cout << numNodesExplored << " nodes explored.\n";
-
-  cout << "Day 18 star 1 = " << star1 << "\n";
-  cout << "Day 18 star 2 = " << star2 << "\n";
-  showDistance("@");
-  //  showDistance("afbjgnhdloepcikm");
-} // not 4530, not 4550
-  // xkvncotfhaegqyzbusdiwpjlrm with cost 5070 after exploring 27
-  // xkvncotfhaegqybzus with cost 4842 after exploring 67
-  // xkvncofhaegqybzuts with cost 4830 after exploring 282499
-  // xkvncohaegqybzutfs with cost 4814 after exploring 471861
-  // xkvncohaegqybzuts with cost 4802 after exploring 471863
-  // xkvnchaegqybzuotfs with cost 4670 after exploring 2901767
-  // xkvnchaegqybzuots with cost 4658 after exploring 2901769
-  // xkvnhaegqybzucotfs with cost 4574 after exploring 40560518
-  // xkvnhaegqybzucots with cost 4562 after exploring 40560520
-  // xvnhkaegqybzucots with cost 4558 after exploring 1280535894
-
-// Without sorting:
-// abcdefgh <--- search order for first key
-// abcdefghijklmnop with cost 178 after exploring 17
-// abcdefghijopknlm with cost 176 after exploring 327
-// abcdefghipjoklmn with cost 174 after exploring 1027
-// abcdefghipjoknlm with cost 172 after exploring 1035
-// abcdefghklmnjoip with cost 170 after exploring 2338
-// abcdefghlmknipjo with cost 168 after exploring 3490
-// abcdefghlmknjoip with cost 166 after exploring 3500
-// abcdefghmlknipjo with cost 164 after exploring 4247
-// abcdefghmlknjoip with cost 162 after exploring 4257
-// abcdefgnhmlkipjo with cost 160 after exploring 7787
-// abcdefgnhmlkjoip with cost 158 after exploring 7797
-// abcdefognhmlkipj with cost 156 after exploring 18807
-// abcdefognhmlkjip with cost 154 after exploring 18810
-// abcdfognhmepijkl with cost 152 after exploring 76321
-// abcdfognhmlepijk with cost 150 after exploring 76388
-// abcdgnhmepifojkl with cost 148 after exploring 107498
-// abcdhmgnepifojkl with cost 144 after exploring 134429
-// abcefdlhmgnkjoip with cost 142 after exploring 156826
-// abdhgnciepfojklm with cost 140 after exploring 536267
-// abjcefdlhmgnkoip with cost 138 after exploring 1348505
-// abjdhgnciepfoklm with cost 136 after exploring 1409029
-// 23157377 nodes explored.
-// 1568 equivalent paths.
-// Best order was abjdhgnciepfoklm
-// Day 18 star 1 = 136
-// Day 18 star 2 = 0
-// Time required: 26.7047 seconds
-
-// With sorting
-// abfgcdeh <--- search order for first key
-// agbfceidhmlknjop with cost 150 after exploring 17
-// agbfceidlhmknjop with cost 146 after exploring 123
-// agbfciedlhmknjop with cost 142 after exploring 10853
-// agbjfciedlhmknop with cost 138 after exploring 97639
-// agdhbjfociepknlm with cost 136 after exploring 311472
-// 22365270 nodes explored.
-// 1568 equivalent paths.
-// Best order was agdhbjfociepknlm
-// Day 18 star 1 = 136
-// Day 18 star 2 = 0
-// Time required: 28.337 seconds
-
-// Max key is i
-// defa <--- search order for first key
-// defacigbh with cost 87 after exploring 10
-// deacfi with cost 85 after exploring 20
-// dacfi with cost 83 after exploring 74
-// acfidgb with cost 81 after exploring 230
-// 362 nodes explored.
-// 2 equivalent paths.
-// Best order was acfidgb
-// Day 18 star 1 = 81
-// Day 18 star 2 = 0
-// Time required: 0.000322427 seconds
+  std::cout << "Day 18 star 1 = " << star1 << "\n";
+  std::cout << "Day 18 star 2 = " << star2 << "\n";
+}
