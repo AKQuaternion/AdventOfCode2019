@@ -61,27 +61,28 @@ double timesec() {
 }
 int main() {
   double time1 = timesec(); // End time (sec)
-  //  day1();
-  //  day2();
-  //  day3();
-  //  day4();
-                            //  day5();
-                            //  day6();
-                            //  day7();
-                            //  day8();
-                            //  day9();
-                            //  day10old();
-                            //  day11();
-                            //  day12();
-                            //  day13();
-                            //  day14();
-                            //    day15();
-                            //    day16();
-                            //    day17();
+
+  day1();
+  day2();
+  day3();
+  day4();
+  day5();
+  day6();
+  day7();
+  day8();
+  day9();
+  day10old();
+  day11();
+  day12();
+  day13();
+  day14();
+  day15();
+  day16();
+  day17();
   day18();
-  //   day19();
-  //    day20();
-  //  day21();
+  day19();
+  day20();
+  day21();
   double time2 = timesec();           // End time (sec)
   double elapsedtime = time2 - time1; // Elapsed (sec)
   std::cout << "Time required: " << elapsedtime << " seconds" << std::endl;
@@ -113,17 +114,30 @@ int main() {
 // Day 10 star 1 = 296
 // Day 10 star 2 = 204
 // Day 11 star 1 = 2511
-// **    **      ****  **    **      ****  **    **    ****    ******    ** **
-// **    **        **  **  **          **  **  **    **    **  **    **  ** **
-// ********        **  ****            **  ****      **        **    ** ********
-// **    **        **  **  **          **  **  **    **  ****  ******    ** **
-// **    **  **    **  **  **    **    **  **  **    **    **  **        ** **
-// **    **    ****    **    **    ****    **    **    ******  **        ** **
+// Day 11 star 2 =
+// *     *       * *   *     *       * *   *     *     * *     * * *     *     *
+// *     *         *   *   *           *   *   *     *     *   *     *   *     *
+// * * * *         *   * *             *   * *       *         *     *   * * * *
+// *     *         *   *   *           *   *   *     *   * *   * * *     *     *
+// *     *   *     *   *   *     *     *   *   *     *     *   *         *     *
+// *     *     * *     *     *     * *     *     *     * * *   *         *     *
 // Day 12 star 1 = 13500
 // Day 12 star 2 = 278013787106916
 // Day 13 star 1 = 376
 // Day 13 star 2 = 18509
 // Day 14 star 1 = 97422
 // Day 14 star 2 = 13108426
+// Day 15 star 1 = 318
+// Day 15 star 2 = 390
+// Day 16 star 1 = 44098263
+// Day 16 star 2 = 12482168
+// Day 17 star 1 = 10064
+// Day 17 star 2 = 1197725
+// Day 18 star 1 = 4520
+// Day 18 star 2 = 1540
+// Day 19 star 1 = 197
+// Day 19 star 2 = 919022
+// Day 20 star 1 = 686
+// Day 20 star 2 = 8384
 // Day 21 star 1 = 19355436
 // Day 21 star 2 = 1142618405

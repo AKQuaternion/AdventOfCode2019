@@ -29,9 +29,9 @@ map<Position, int> paint(int startColor, Intcode &i) {
     if (state == Intcode::HALT)
       return grid;
     auto out = i.getOutput();
-    for (int i = 0; i < out.size(); i += 2) {
-      grid[pos] = out[i];
-      dir = (dir + (out[i + 1] == 0 ? 1 : 3)) % 4;
+    for (int o = 0; o < out.size();) {
+      grid[pos] = out[o++];
+      dir = (dir + (out[o++] == 0 ? 1 : 3)) % 4;
       pos.first += dirs[dir].first;
       pos.second += dirs[dir].second;
     }
@@ -60,6 +60,7 @@ void day11() {
     maxx = std::max(maxx, px);
     maxy = std::max(maxy, py);
   }
+  cout << "Day 11 star 2 =\n";
   for (int y = maxy; y >= miny; --y) {
     for (int x = minx; x <= maxx; ++x)
       cout << (grid[{x, y}] == 0 ? "  " : "* ");

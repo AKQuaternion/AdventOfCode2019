@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+
 void day4() {
   auto star1 = 0;
   auto star2 = 0;

@@ -65,22 +65,22 @@ bool verify(int sx, int sy) {
 void day19() {
   auto star1 = 0;
   auto star2 = 0;
-  //
-  //   for(int x=0;x<50;++x)
-  //      for(int y=0;y<50;++y) {
-  //       star1 += probe(x,y);
-  //     }
 
-  for (int r = 0; r < 110; ++r) {
-    for (int c = 0; c < 110; ++c)
-      if (c >= 86 && c < 86 + 10 && r >= 96 && r < 96 + 10)
-        cout << '=';
-      else if (probe(c, r))
-        cout << 'X';
-      else
-        cout << '.';
-    cout << endl;
-  }
+  for (int x = 0; x < 50; ++x)
+    for (int y = 0; y < 50; ++y) {
+      star1 += probe(x, y);
+    }
+
+  //  for (int r = 0; r < 110; ++r) {
+  //    for (int c = 0; c < 110; ++c)
+  //      if (c >= 86 && c < 86 + 10 && r >= 96 && r < 96 + 10)
+  //        cout << '=';
+  //      else if (probe(c, r))
+  //        cout << 'X';
+  //      else
+  //        cout << '.';
+  //    cout << endl;
+  //  }
   int sx = 50;
   int sy = 50;
 checkrow:
@@ -98,12 +98,8 @@ checkrow:
       goto checkrow;
     }
   }
-  verify(sx, sy);
-  verify(sx - 1, sy);
-  verify(sx, sy - 1);
-  verify(sx - 1, sy - 1);
-  cout << endl;
-  cout << sx << " " << sy << endl;
+  //  cout << sx << " " << sy << endl;
+  star2 = 1000 * sx + sy;
   //    for(int y=0;y<50;++y) {
   //      auto s = i.run({x,y});
   //      auto out = i.getOutput();

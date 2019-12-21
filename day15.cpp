@@ -3,11 +3,7 @@
 //
 #include "Intcode.hpp"
 
-#include <algorithm>
-#include <cmath>
-#include <cstdlib>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <map>
 #include <numeric>
@@ -19,7 +15,6 @@
 #include <utility>
 #include <vector>
 using std::abs;
-using std::ceil;
 using std::cout;
 using std::endl;
 using std::forward_as_tuple;
@@ -33,7 +28,6 @@ using std::min;
 using std::pair;
 using std::queue;
 using std::set;
-using std::sqrt;
 using std::string;
 using std::swap;
 using std::tie;
@@ -51,7 +45,7 @@ using std::vector;
 // 2 known wall
 // 3 Oxygen
 map<pair<int, int>, int> grid;
-
+int oxyX, oxyY;
 void printit() {
   grid[{0, 0}] = 'o';
   const int sz = 80;
@@ -93,10 +87,11 @@ void explore(Intcode &i, int x, int y, int dir) {
       grid[{x, y}] = 1;
       fill(i, x, y);
       i.run({opposite[dir]});
-    } else // if out.back() == 2
-    {
+    } else { // if out.back() == 2
       grid[{x, y}] = 3;
-      cout << "Oxy at " << x << ", " << y << endl;
+      //      cout << "Oxy at " << x << ", " << y << endl;
+      oxyX = x;
+      oxyY = y;
       fill(i, x, y);
       i.run({opposite[dir]});
     }
@@ -110,11 +105,11 @@ void fill(Intcode &i, int x, int y) {
   explore(i, x + 1, y, 4);
 }
 
-int bfs(int x, int y) {
+int bfs(int sx, int sy) {
   int maxd = 0;
   set<pair<int, int>> visited;
   queue<pair<pair<int, int>, int>> explore;
-  explore.push({{x, y}, 0});
+  explore.push({{sx, sy}, 0});
   while (!explore.empty()) {
     auto [pos, d] = explore.front();
     maxd = d;
@@ -123,7 +118,8 @@ int bfs(int x, int y) {
     auto [x, y] = pos;
     //    cout << "exploring " << x << " " << y << " d=" << d << endl;
     if (grid[{x, y}] == 3) {
-      cout << "!!! " << d << endl;
+      if (d > 0)
+        cout << "Day 15 star 1 = " << d << "\n";
     }
     if (grid[{x, y + 1}] % 2 == 1 && visited.count({x, y + 1}) == 0)
       explore.push({{x, y + 1}, d + 1});
@@ -144,9 +140,9 @@ void day15() {
   Intcode i(ifile);
   grid[{0, 0}] = 1;
   fill(i, 0, 0);
-  //  printit();
+  //    printit();
   bfs(0, 0);
-  star2 = bfs(14, 12);
-  cout << "Day 15 star 1 = " << star1 << "\n";
+  star2 = bfs(oxyX, oxyY);
+
   cout << "Day 15 star 2 = " << star2 << "\n";
 }

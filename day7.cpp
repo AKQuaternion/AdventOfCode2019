@@ -13,14 +13,14 @@ using std::endl;
 using std::ifstream;
 using std::vector;
 
-int runPhases(const Intcode &program, vector<int> phase, bool feedback) {
+auto runPhases(const Intcode &program, vector<int> phase, bool feedback) {
   long long star = 0;
   do {
     vector<Intcode> amps(5, program);
     for (int i = 0; i < 5; ++i)
       amps[i].enqueueInput({phase[i]});
     vector<long long> previousOutput({0});
-    Intcode::State state;
+    Intcode::State state{Intcode::HALT};
     do
       for (int i = 0; i < 5; ++i) {
         state = amps[i].run(previousOutput);

@@ -49,7 +49,7 @@ void day17() {
   auto out = i.getOutput();
   string asciiOutput;
   std::copy(out.begin(), out.end(), std::back_inserter(asciiOutput));
-  cout << asciiOutput;
+  //  cout << asciiOutput;
   istringstream fromOutput(asciiOutput);
   string line;
   vector<string> grid;
@@ -109,7 +109,7 @@ void day17() {
     }
     path += std::to_string(length) + ",";
   }
-  cout << path << endl;
+  //  cout << path << endl;
   i.reset();
   i.freeplay();
 

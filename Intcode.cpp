@@ -88,7 +88,7 @@ void Intcode::readProgram(std::istream &in) {
   int loc = 0;
   while (in) {
     char c;
-    long long i;
+    long long i = 0;
     in >> i >> c;
     _originalProgram[loc++] = i;
   }

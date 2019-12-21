@@ -34,8 +34,10 @@ void day3() {
 
   auto grid1 = pathToGrid(line1);
   auto grid2 = pathToGrid(line2);
-  int star1 = grid1.size() + grid2.size(); // larger than any possible result
-  int star2 = grid1.size() + grid2.size(); // larger than any possible result
+  auto star1 =
+      int(grid1.size() + grid2.size()); // larger than any possible result
+  auto star2 =
+      int(grid1.size() + grid2.size()); // larger than any possible result
 
   for (auto [pos, steps] : grid2) {
     if (grid1.count(pos) > 0) { // path intersection

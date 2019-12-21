@@ -46,10 +46,11 @@ class Moon {
   friend void updateVelocity(Moon &m1, Moon &m2);
 
 public:
-  Moon(const string &s) {
+  explicit Moon(const string &s) {
     istringstream in(s);
-    char c; // dummy
+    char c = ' '; // dummy
     in >> c >> c >> c >> p[0] >> c >> c >> c >> p[1] >> c >> c >> c >> p[2];
+    assert(in);
   }
   void updatePosition() {
     for (int ii = 0; ii < 3; ++ii)

@@ -23,7 +23,7 @@ struct Ingredient {
 };
 
 struct Reaction {
-  int makes;
+  int makes = 1;
   vector<Ingredient> ingredients;
 };
 
@@ -51,7 +51,7 @@ map<string, Reaction> readInput(std::istream &ifile) {
   map<string, Reaction> reactions;
   string line;
   while (getline(ifile, line)) {
-    Ingredient i;
+    Ingredient i{0, ""};
     vector<Ingredient> ingredients;
     std::istringstream iline(line);
     bool done = false;
