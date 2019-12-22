@@ -17,7 +17,7 @@ using std::vector;
 class Day18 {
   using Vertex = pair<short, short>;
 
-  int pack(Vertex v) { return v.first << 16 | v.second; }
+  static int pack(Vertex v) { return v.first << 16 | v.second; }
 
   // BFS from current robot positions to find possible next keys to pick up
   auto findChoices(const string &order, const vector<Vertex> &robots) {
@@ -38,7 +38,7 @@ class Day18 {
           result.emplace_back(robot, ch, dist); // This is a choice for next key
           continue;                             // don't travel past a new key
         }
-        if (isupper(ch) && order.find(tolower(ch)) == string::npos)
+        if (isupper(ch) && order.find(char(tolower(ch))) == string::npos)
           continue; // don't travel past a door we don't have the key for
         for (auto nbr : edges[pack(node)])
           q.push({nbr, dist + 1}); // search neighbor nodes
@@ -128,9 +128,9 @@ public:
     auto [ry, rx] = robotPositions.front();
     auto star1 = fewestStepsToGetRestOfKeys(keysCollected, robotPositions);
 
-    grid[ry - 1].replace(rx - 1, 3, "@#@");
-    grid[ry + 0].replace(rx - 1, 3, "###");
-    grid[ry + 1].replace(rx - 1, 3, "@#@");
+    grid[ry - 1].replace(int(rx - 1), 3, "@#@");
+    grid[ry + 0].replace(int(rx - 1), 3, "###");
+    grid[ry + 1].replace(int(rx - 1), 3, "@#@");
     numNodesExplored = 0ull;
     memos.clear();
     edges.clear();

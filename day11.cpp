@@ -30,7 +30,7 @@ map<Position, int> paint(int startColor, Intcode &i) {
       return grid;
     auto out = i.getOutput();
     for (int o = 0; o < out.size();) {
-      grid[pos] = out[o++];
+      grid[pos] = int(out[o++]);
       dir = (dir + (out[o++] == 0 ? 1 : 3)) % 4;
       pos.first += dirs[dir].first;
       pos.second += dirs[dir].second;

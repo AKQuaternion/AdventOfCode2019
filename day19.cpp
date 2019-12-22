@@ -45,7 +45,7 @@ using std::vector;
 ifstream ifile("../day19.txt");
 Intcode i(ifile);
 
-int probe(int x, int y) {
+auto probe(int x, int y) {
   i.reset();
   auto s = i.run({x, y});
   auto out = i.getOutput();

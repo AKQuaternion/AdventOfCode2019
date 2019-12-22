@@ -69,7 +69,7 @@ void day17() {
   string dirChars("v<^>"); // SWNE
 
   int r = 0;
-  int c;
+  unsigned long c;
   while (true) {
     c = grid[r].find_first_of(dirChars);
     if (c != string::npos)
@@ -77,7 +77,7 @@ void day17() {
     ++r;
     assert(r < grid.size());
   }
-  int droidDir = dirChars.find(grid[r][c]);
+  auto droidDir = dirChars.find(grid[r][c]);
 
   auto left = [&](int dir) { return (dir + 3) % 4; };
   auto right = [&](int dir) { return (dir + 1) % 4; };

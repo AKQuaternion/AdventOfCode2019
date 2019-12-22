@@ -1,13 +1,5 @@
-//
-// Created by Chris Hartman on 12/11/19.
-//
-#include "Intcode.hpp"
-
-#include <algorithm>
-#include <cmath>
 #include <cstdlib>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <map>
 #include <numeric>
@@ -18,8 +10,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-using std::abs;
-using std::ceil;
 using std::cout;
 using std::endl;
 using std::forward_as_tuple;
@@ -30,23 +20,17 @@ using std::map;
 using std::max;
 using std::max_element;
 using std::min;
-using std::ostream;
-using std::pair;
-using std::queue;
-using std::set;
-using std::sqrt;
-using std::string;
 using std::swap;
 using std::tie;
 using std::tuple;
 using std::vector;
 
 class Moon {
-  friend ostream &operator<<(ostream &os, const Moon &m);
+  friend std::ostream &operator<<(std::ostream &os, const Moon &m);
   friend void updateVelocity(Moon &m1, Moon &m2);
 
 public:
-  explicit Moon(const string &s) {
+  explicit Moon(const std::string &s) {
     istringstream in(s);
     char c = ' '; // dummy
     in >> c >> c >> c >> p[0] >> c >> c >> c >> p[1] >> c >> c >> c >> p[2];
@@ -66,7 +50,7 @@ public:
   long v[3] = {0, 0, 0};
 };
 
-ostream &operator<<(ostream &os, const Moon &m) {
+std::ostream &operator<<(std::ostream &os, const Moon &m) {
   return os << "pos=<x=" << m.p[0] << ", y=" << m.p[1] << ", z=" << m.p[2]
             << ">, vel=<x=" << m.v[0] << ", y=" << m.v[1] << ", z=" << m.v[2]
             << ">";
@@ -83,7 +67,7 @@ void updateVelocity(Moon &m1, Moon &m2) {
     }
 }
 
-long long cycleTime(vector<int> p) {
+long long cycleTime(vector<long> p) {
   vector<int> v(p.size());
   auto orig = make_pair(p, v);
   for (int t = 1;; ++t) {
@@ -119,7 +103,7 @@ void day12() {
   //                        "<x=5, y=5, z=10>\n"
   //                        "<x=2, y=-7, z=3>\n"
   //                        "<x=9, y=-8, z=-3>");
-  string line;
+  std::string line;
   vector<Moon> moons;
   while (getline(ifile, line)) {
     moons.emplace_back(line);
@@ -127,7 +111,7 @@ void day12() {
 
   long long star2 = 1;
   for (int ii = 0; ii < 3; ++ii) {
-    vector<int> p;
+    vector<long> p;
     for (auto &m : moons)
       p.push_back(m.p[ii]);
     star2 = std::lcm(star2, cycleTime(p));

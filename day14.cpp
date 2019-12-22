@@ -18,12 +18,12 @@ using std::vector;
 using Number = unsigned long long;
 
 struct Ingredient {
-  int amountRequired;
+  Number amountRequired;
   string ingredientName;
 };
 
 struct Reaction {
-  int makes = 1;
+  Number makes;
   vector<Ingredient> ingredients;
 };
 

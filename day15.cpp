@@ -134,15 +134,12 @@ int bfs(int sx, int sy) {
 }
 
 void day15() {
-  auto star1 = 0;
-  auto star2 = 0;
   ifstream ifile("../day15.txt");
   Intcode i(ifile);
   grid[{0, 0}] = 1;
   fill(i, 0, 0);
   //    printit();
   bfs(0, 0);
-  star2 = bfs(oxyX, oxyY);
 
-  cout << "Day 15 star 2 = " << star2 << "\n";
+  cout << "Day 15 star 2 = " << bfs(oxyX, oxyY) << "\n";
 }
