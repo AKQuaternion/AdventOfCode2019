@@ -52,11 +52,16 @@ void day23() {
   for (int j = 0; j < 50; ++j)
     nic[j].enqueueInput({j});
 
+  long long natX, natY;
+  long long lastYsent = -1;
   while (true) {
+    bool allIdle = true;
     for (int x = 0; x < 50; ++x) {
       auto &c = nic[x];
       if (c.getInputSize() == 0)
         c.enqueueInput({-1});
+      else
+        allIdle = false;
       auto s = c.run();
       assert(s == Intcode::INPUT);
       if (c.probeOutput() == 255 && c.getOutputSize() >= 2) {
@@ -64,18 +69,33 @@ void day23() {
         for (auto o : out)
           cout << o << " ";
         cout << endl;
-        return;
+        int outP = 0;
+        while (outP < out.size()) {
+          natX = out[outP + 1];
+          natY = out[outP + 2];
+          outP += 3;
+        }
+        //        return;
       }
       if (c.getOutputSize() >= 3) {
         auto out = c.getOutput();
         int outP = 0;
         while (outP < out.size()) {
           nic[out[outP]].enqueueInput({out[outP + 1], out[outP + 2]});
-          cout << out[outP] << " <-- " << out[outP + 1] << "," << out[outP + 2]
-               << endl;
+          //          cout << out[outP] << " <-- " << out[outP + 1] << "," <<
+          //          out[outP + 2]
+          //               << endl;
           outP += 3;
         }
       }
+    }
+    if (allIdle) {
+      nic[0].enqueueInput({natX, natY});
+      if (lastYsent == natY) {
+        cout << "!!! " << natY;
+        return;
+      }
+      lastYsent = natY;
     }
   }
   cout << "Day 23 star 1 = " << star1 << "\n";
