@@ -31,6 +31,7 @@ public:
   long long getOutputSize() { return _output.size(); }
   long long getInputSize() { return _input.size(); }
   long long probeOutput() { return (_output.empty() ? -1 : _output.front()); }
+  bool isIdle() { return _idle; }
 
 private:
   std::map<long long, long long> _originalProgram;
@@ -39,6 +40,7 @@ private:
   long long _ip = 0;
   long long _rp = 0;
   std::vector<long long> _output;
+  bool _idle = true;
 };
 
 #endif // ADVENTOFCODE2019_INTCODE_HPP

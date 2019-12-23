@@ -104,6 +104,8 @@ void Intcode::reset() {
 }
 
 void Intcode::enqueueInput(const std::vector<long long> &input) {
+  if (!_input.empty())
+    _idle = false;
   for (auto i : input)
     _input.push(i);
 }
@@ -216,10 +218,12 @@ Intcode::State Intcode::step() {
     break;
   case 3: // input
     if (_input.empty()) {
+      _idle = true;
       par(1) = -1;
-    } else
+    } else {
       par(1) = _input.front();
-    _input.pop();
+      _input.pop();
+    }
     _ip += 2;
     break;
   case 4: // output
