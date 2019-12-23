@@ -29,6 +29,7 @@ public:
   void freeplay() { _p[0] = 2; }
   std::vector<long long> getOutput();
   long long getOutputSize() { return _output.size(); }
+  long long getInputSize() { return _input.size(); }
   long long probeOutput() { return (_output.empty() ? -1 : _output.front()); }
 
 private:

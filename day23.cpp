@@ -55,17 +55,26 @@ void day23() {
   while (true) {
     for (int x = 0; x < 50; ++x) {
       auto &c = nic[x];
-      c.step();
+      if (c.getInputSize() == 0)
+        c.enqueueInput({-1});
+      auto s = c.run();
+      assert(s == Intcode::INPUT);
       if (c.probeOutput() == 255 && c.getOutputSize() >= 2) {
         auto out = c.getOutput();
-        cout << out[1] << endl;
-        if (out.size() > 2)
-          cout << out[2] << endl;
+        for (auto o : out)
+          cout << o << " ";
+        cout << endl;
         return;
       }
-      if (c.getOutputSize() == 3) {
+      if (c.getOutputSize() >= 3) {
         auto out = c.getOutput();
-        nic[out[0]].enqueueInput({out[1], out[2]});
+        int outP = 0;
+        while (outP < out.size()) {
+          nic[out[outP]].enqueueInput({out[outP + 1], out[outP + 2]});
+          cout << out[outP] << " <-- " << out[outP + 1] << "," << out[outP + 2]
+               << endl;
+          outP += 3;
+        }
       }
     }
   }
