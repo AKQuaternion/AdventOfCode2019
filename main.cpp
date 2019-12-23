@@ -47,9 +47,9 @@ void day25();
 // day 18 Robots picking up keys BFS
 // day 19 Intcode Map tractor beam and find square containment
 // day 20 Explore a maze
-// day 21
-// day 22
-// day 23
+// day 21 Intcode jumping droid
+// day 22 Shuffle cards with lots of modular arithmetic
+// day 23 Intcode ?
 // day 24
 // day 25
 void day10old();
@@ -84,7 +84,7 @@ int main() {
   //  day19();
   //  day20();
   //  day21();
-  day22();
+  day23();
   double time2 = timesec();           // End time (sec)
   double elapsedtime = time2 - time1; // Elapsed (sec)
   std::cout << "Time required: " << elapsedtime << " seconds" << std::endl;
@@ -143,3 +143,5 @@ int main() {
 // Day 20 star 2 = 8384
 // Day 21 star 1 = 19355436
 // Day 21 star 2 = 1142618405
+// Day 22 star 1 = 4086
+// Day 22 star 2 = 1041334417227

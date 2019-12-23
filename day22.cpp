@@ -1,174 +1,119 @@
-
-#include <algorithm>
-#include <cmath>
-#include <cstdlib>
+#include "/usr/local/include/gmp.h"
+#include "/usr/local/include/gmpxx.h"
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
-#include <map>
 #include <memory>
-#include <numeric>
-#include <queue>
-#include <set>
 #include <sstream>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
-using std::abs;
-using std::ceil;
-using std::cout;
-using std::endl;
-using std::forward_as_tuple;
-using std::ifstream;
-using std::istream;
-using std::istringstream;
-using std::map;
-using std::max;
-using std::max_element;
-using std::min;
-using std::pair;
-using std::queue;
-using std::set;
-using std::sqrt;
-using std::string;
-using std::swap;
-using std::tie;
-using std::tuple;
-using std::vector;
 
-using Number = long long;
+using Number = mpz_class;
 
 Number numCards = 119'315'717'514'047;
-Number numTimes = 101'741'582'076'661;
+long numTimes = 101'741'582'076'661;
 
-void xgcd(Number *result, Number a, Number b) {
-  Number aa[2] = {1, 0}, bb[2] = {0, 1}, q;
-  while (true) {
-    q = a / b;
-    a = a % b;
-    aa[0] = aa[0] - q * aa[1];
-    bb[0] = bb[0] - q * bb[1];
-    if (a == 0) {
-      result[0] = b;
-      result[1] = aa[1];
-      result[2] = bb[1];
-      return;
-    };
-    q = b / a;
-    b = b % a;
-    aa[1] = aa[1] - q * aa[0];
-    bb[1] = bb[1] - q * bb[0];
-    if (b == 0) {
-      result[0] = a;
-      result[1] = aa[0];
-      result[2] = bb[0];
-      return;
-    };
-  };
+enum class Technique { NEWSTACK, CUT, DEAL };
+std::pair<Technique, int> parseLine(std::string const &line) {
+  std::string word;
+  std::istringstream iline(line);
+  iline >> word;
+  if (word == "cut") {
+    int i;
+    iline >> i;
+    return {Technique::CUT, i};
+  } else {
+    assert(word == "deal");
+    iline >> word;
+    if (word == "with") {
+      int i;
+      iline >> word >> i;
+      assert(word == "increment");
+      return {Technique::DEAL, i};
+    } else {
+      assert(word == "into");
+      return {Technique::NEWSTACK, 0};
+    }
+  }
 }
 
-Number inverse(Number x) {
-  Number e[3];
-  xgcd(e, x, numCards);
-  return e[1];
+Number inverse(Number i) {
+  Number inverse;
+  mpz_invert(inverse.get_mpz_t(), Number(i).get_mpz_t(), numCards.get_mpz_t());
+  return inverse;
 }
 
 void day22() {
-  numCards = 10007;
-  ifstream ifile("../day22.txt");
+  std::ifstream ifile("../day22.txt");
 
-  //  istringstream ifile("deal with increment 7\n"
-  //                      "deal into new stack\n"
-  //                      "deal into new stack\n");
-  //                         "Result: 0 3 6 9 2 5 8 1 4 7");
-
-  //  istringstream ifile("deal into new stack\n"
-  //                      "cut -2\n"
-  //                      "deal with increment 7\n"
-  //                      "cut 8\n"
-  //                      "cut -4\n"
-  //                      "deal with increment 7\n"
-  //                      "cut 3\n"
-  //                      "deal with increment 9\n"
-  //                      "deal with increment 3\n"
-  //                      "cut -1\n");
-  //                      "Result: 9 2 5 8 1 4 7 0 3 6");
-
-  string aline;
-  vector<string> shuffle;
+  std::string aline;
+  std::vector<std::string> shuffle;
   while (getline(ifile, aline)) {
     shuffle.push_back(aline);
   }
 
-  Number mul = 1, add = 0;
-  for (const auto &line : shuffle) {
-    string _s;
-    istringstream iline(line);
-    iline >> _s;
-    if (_s == "cut") {
-      int i;
-      iline >> i;
-      add += (numCards - i);
-      add %= numCards;
-    } else {
-      assert(_s == "deal");
-      iline >> _s;
-      if (_s == "with") {
-        int i;
-        iline >> _s >> i;
-        assert(_s == "increment");
-        mul = mul * i % numCards;
-        add = add * i % numCards;
-      } else {
-        assert(_s == "into");
-        mul = numCards - mul;
-        add = numCards - 1 - add;
-      }
+  // For part 1
+  // we note that all the shuffling operations take the card at position p
+  // to a new position equal to (mp+a mod numCards), for some m and a:
+  // a cut to i just subtracts i from p, p = p + -i
+  // a "new deal" (reversing the deck) sends p = (numCards-1)-p
+  // and dealing to every i'th position is p = i*p
+  // Keeping those cumulative, we begin with m=1 and a=0:
+  // CUT: mx + a -> mx + a-i is a -= i
+  // NEWSTACK: mx + a -> (numCards-1-(mx + a)) is m = -m, a = numCards-1-a
+  // DEAL: mx + a -> i*(mx + a) is m *= i, a *= i
+
+  Number m1 = 1;
+  Number a1 = 0;
+  long const numCardsPart1 = 10007;
+  for (auto line : shuffle) {
+    auto [technique, i] = parseLine(line);
+    switch (technique) {
+    case Technique::CUT:
+      a1 = (a1 + (numCardsPart1 - i)) % numCardsPart1;
+      break;
+    case Technique::NEWSTACK:
+      m1 = numCardsPart1 - m1;
+      a1 = numCardsPart1 - 1 - a1;
+      break;
+    case Technique::DEAL:
+      m1 = (m1 * i) % numCardsPart1;
+      a1 = (a1 * i) % numCardsPart1;
+      break;
     }
   }
 
-  auto star1 = (2019 * mul + add) % numCards;
-  cout << "Day 22 star 1 = " << star1 << "\n";
+  std::cout << "Day 22 star 1 = " << (2019 * m1 + a1) % numCardsPart1
+            << std::endl;
 
-  mul = 1;
-  add = 0;
+  // For part 2, we need to find out what card ends
+  Number mul = 1;
+  Number add = 0;
   for (auto t = shuffle.rbegin(); t != shuffle.rend(); ++t) {
-    const auto &line = *t;
-    string _s;
-    istringstream iline(line);
-    iline >> _s;
-    if (_s == "cut") {
-      int i;
-      iline >> i;
-      add += i;
-      add %= numCards;
-    } else {
-      assert(_s == "deal");
-      iline >> _s;
-      if (_s == "with") {
-        int i;
-        iline >> _s >> i;
-        assert(_s == "increment");
-        mul = mul * inverse(i) % numCards;
-        add = add * inverse(i) % numCards;
-      } else {
-        assert(_s == "into");
-        mul = numCards - mul;
-        add = numCards - 1 - add;
-      }
+    auto [technique, i] = parseLine(*t);
+    switch (technique) {
+    case Technique::CUT:
+      add = (add + i) % numCards;
+      break;
+    case Technique::DEAL:
+      mul = (mul * inverse(i)) % numCards;
+      add = (add * inverse(i)) % numCards;
+      break;
+    case Technique::NEWSTACK:
+      mul = numCards - mul;
+      add = numCards - 1 - add;
+      break;
     }
   }
-  mul = (mul + numCards) % numCards;
-  auto star2 = (4086 * mul + add) % numCards;
-  cout << "Day 22 star 2 = " << star2 << "\n";
+  // so now the card at position p goes to mul*p + add
+  // iterating p = m*p+a n times gives us
+  // m^n * p + (m^(n-1) + m^(n-2) + ... + m + 1)*a
+  // = m^n * p + ((m^n-1)/(m-1))*a
+  Number mn;
+  mpz_powm_ui(mn.get_mpz_t(), mul.get_mpz_t(), numTimes, numCards.get_mpz_t());
+  Number left = mn * 2020;
+  Number right = (mn - 1) * inverse(mul - 1) * add;
+  std::cout << "Day 22 star 2 = " << (left + right) % numCards << std::endl;
 }
-
-// cut -135
-// deal with increment 38
-// deal into new stack
-// deal with increment 29
-// cut 120
-// deal with increment 30
-// deal into new stack

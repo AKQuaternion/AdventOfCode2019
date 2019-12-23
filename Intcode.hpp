@@ -18,15 +18,18 @@ private:
   long long &par(long long n);
 
 public:
-  enum State { INPUT, HALT };
+  enum State { INPUT, HALT, CONT };
   explicit Intcode(std::istream &in);
   Intcode::State run(std::vector<long long> const &input = {});
+  Intcode::State step();
   long long run(int noun, int verb);
   void reset();
   void enqueueInput(const std::vector<long long> &input);
   void compile();
   void freeplay() { _p[0] = 2; }
   std::vector<long long> getOutput();
+  long long getOutputSize() { return _output.size(); }
+  long long probeOutput() { return (_output.empty() ? -1 : _output.front()); }
 
 private:
   std::map<long long, long long> _originalProgram;

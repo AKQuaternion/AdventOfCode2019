@@ -203,3 +203,54 @@ std::vector<long long> Intcode::getOutput() {
   temp.swap(_output);
   return temp;
 }
+
+Intcode::State Intcode::step() {
+  switch (_p[_ip] % 100) {
+  case 1: // add
+    par(3) = par(1) + par(2);
+    _ip += 4;
+    break;
+  case 2: // multiply
+    par(3) = par(1) * par(2);
+    _ip += 4;
+    break;
+  case 3: // input
+    if (_input.empty()) {
+      par(1) = -1;
+    } else
+      par(1) = _input.front();
+    _input.pop();
+    _ip += 2;
+    break;
+  case 4: // output
+    _output.push_back(par(1));
+    _ip += 2;
+    break;
+  case 5: // jump-if-true
+    _ip = (par(1) != 0) ? par(2) : _ip + 3;
+    break;
+  case 6: // jump-if-false
+    _ip = (par(1) == 0) ? par(2) : _ip + 3;
+    break;
+  case 7: // less than
+    par(3) = (par(1) < par(2)) ? 1 : 0;
+    _ip += 4;
+    break;
+  case 8: // equals
+    par(3) = (par(1) == par(2)) ? 1 : 0;
+    _ip += 4;
+    break;
+  case 9: // adjust rp
+    _rp += par(1);
+    _ip += 2;
+    break;
+  case 99:
+    return HALT;
+  default:
+    throw(std::runtime_error("Unimplemented Intcode opcode in Intcode::run()"));
+  }
+  if (_ip > _p.size())
+    return HALT;
+  else
+    return CONT;
+}
