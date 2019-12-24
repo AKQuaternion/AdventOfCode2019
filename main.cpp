@@ -49,7 +49,7 @@ void day25();
 // day 20 Explore a maze
 // day 21 Intcode jumping droid
 // day 22 Shuffle cards with lots of modular arithmetic
-// day 23 Intcode ?
+// day 23 Intcode 50 networked NICs which can idle, and a NAT
 // day 24
 // day 25
 void day10old();
@@ -84,7 +84,9 @@ int main() {
   //  day19();
   //  day20();
   //  day21();
-  day23();
+  //  day22();
+  //  day23();
+  day24();
   double time2 = timesec();           // End time (sec)
   double elapsedtime = time2 - time1; // Elapsed (sec)
   std::cout << "Time required: " << elapsedtime << " seconds" << std::endl;
@@ -145,3 +147,5 @@ int main() {
 // Day 21 star 2 = 1142618405
 // Day 22 star 1 = 4086
 // Day 22 star 2 = 1041334417227
+// Day 23 star 1 = 21160
+// Day 23 star 2 = 14331
