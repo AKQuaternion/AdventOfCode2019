@@ -1,6 +1,3 @@
-//
-// Created by Chris Hartman on 12/1/19.
-//
 #include "Intcode.hpp"
 
 #include <fstream>

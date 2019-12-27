@@ -1,29 +1,10 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <numeric>
-#include <queue>
-#include <set>
 #include <sstream>
-#include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
-using std::cout;
-using std::endl;
-using std::forward_as_tuple;
-using std::ifstream;
-using std::istream;
-using std::istringstream;
-using std::map;
-using std::max;
-using std::max_element;
-using std::min;
-using std::swap;
-using std::tie;
-using std::tuple;
-using std::vector;
 
 class Moon {
   friend std::ostream &operator<<(std::ostream &os, const Moon &m);
@@ -31,22 +12,21 @@ class Moon {
 
 public:
   explicit Moon(const std::string &s) {
-    istringstream in(s);
+    std::istringstream in(s);
     char c = ' '; // dummy
     in >> c >> c >> c >> p[0] >> c >> c >> c >> p[1] >> c >> c >> c >> p[2];
-    assert(in);
   }
   void updatePosition() {
     for (int ii = 0; ii < 3; ++ii)
       p[ii] += v[ii];
   }
-  long long energy() {
+  long energy() {
     return (abs(p[0]) + abs(p[1]) + abs(p[2])) *
            (abs(v[0]) + abs(v[1]) + abs(v[2]));
   }
 
   // private:
-  long p[3];
+  long p[3]{};
   long v[3] = {0, 0, 0};
 };
 
@@ -57,7 +37,7 @@ std::ostream &operator<<(std::ostream &os, const Moon &m) {
 }
 
 void updateVelocity(Moon &m1, Moon &m2) {
-  for (int ii = 0; ii < 3; ++ii)
+  for (int ii = 0; ii < 3; ++ii) // TODO !!! Factor out inner part of this loop
     if (m1.p[ii] < m2.p[ii]) {
       ++m1.v[ii];
       --m2.v[ii];
@@ -67,16 +47,10 @@ void updateVelocity(Moon &m1, Moon &m2) {
     }
 }
 
-long long cycleTime(vector<long> p) {
-  vector<int> v(p.size());
+long cycleTime(std::vector<long> p) {
+  std::vector<int> v(p.size());
   auto orig = make_pair(p, v);
   for (int t = 1;; ++t) {
-    //    cout << t;
-    //    for(auto x:p)
-    //      cout << " " << x;
-    //    for(auto x: v)
-    //      cout << " " << x;
-    //    cout << endl;
     for (int p1 = 0; p1 < v.size(); ++p1)
       for (int p2 = p1 + 1; p2 < v.size(); ++p2)
         if (p[p1] < p[p2]) {
@@ -94,36 +68,22 @@ long long cycleTime(vector<long> p) {
 }
 
 void day12() {
-  ifstream ifile("../day12.txt");
-  //  istringstream ifile("<x=-1, y=0, z=2>\n"
-  //                      "<x=2, y=-10, z=-7>\n"
-  //                      "<x=4, y=-8, z=8>\n"
-  //                      "<x=3, y=5, z=-1>");
-  //    istringstream ifile("<x=-8, y=-10, z=0>\n"
-  //                        "<x=5, y=5, z=10>\n"
-  //                        "<x=2, y=-7, z=3>\n"
-  //                        "<x=9, y=-8, z=-3>");
+  std::ifstream ifile("../day12.txt");
   std::string line;
-  vector<Moon> moons;
+  std::vector<Moon> moons;
   while (getline(ifile, line)) {
     moons.emplace_back(line);
   }
 
   long long star2 = 1;
   for (int ii = 0; ii < 3; ++ii) {
-    vector<long> p;
+    std::vector<long> p;
     for (auto &m : moons)
       p.push_back(m.p[ii]);
     star2 = std::lcm(star2, cycleTime(p));
   }
 
   for (int time = 0; time < 1000; ++time) {
-    //    cout << "After " << time << " steps:\n";
-    //    for (auto &m : moons)
-    //      cout << m << endl;
-    //
-    //    cout << endl;
-
     for (int m1 = 0; m1 < moons.size(); ++m1)
       for (int m2 = m1 + 1; m2 < moons.size(); ++m2)
         updateVelocity(moons[m1], moons[m2]);
@@ -136,6 +96,6 @@ void day12() {
       std::accumulate(moons.begin(), moons.end(), 0,
                       [](auto sum, auto m) { return sum + m.energy(); });
 
-  cout << "Day 12 star 1 = " << star1 << "\n";
-  cout << "Day 12 star 2 = " << star2 << "\n";
+  std::cout << "Day 12 star 1 = " << star1 << "\n";
+  std::cout << "Day 12 star 2 = " << star2 << "\n";
 }

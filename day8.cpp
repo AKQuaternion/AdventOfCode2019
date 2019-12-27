@@ -16,7 +16,8 @@ void day8() {
               std::count(layer.begin(), layer.end(), '2');
     }
     for (auto i = 0ul; i < star2.size(); ++i)
-      star2[i] = (star2[i] != '2' ? star2[i] : layer[i]);
+      if (star2[i] == '2')
+        star2[i] = layer[i];
   }
 
   std::cout << "Day 8 star 1 = " << star1 << "\nDay 8 star 2 =";

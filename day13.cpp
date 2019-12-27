@@ -1,12 +1,13 @@
-//
-// Created by Chris Hartman on 12/12/19.
-//
 #include "Intcode.hpp"
 
 //#define USECURSES
-
+// If using curses, run in terminal (not IDE)
+// , to slow down, . to speed up
 #ifdef USECURSES
-#include <curses.h>
+#include <chrono>
+#include <ncurses.h>
+#include <sstream>
+#include <thread>
 #endif
 #include <fstream>
 #include <iostream>
@@ -17,25 +18,25 @@ int sgn(double v) { return (v > 0) - (v < 0); }
 void display(int x, int y, int tile) {
 #ifdef USECURSES
   char symbol[] = " |#=o";
-
-  for (auto row = 0; row < 25; ++row) {
-    for (auto col = 0; col < 80; ++col) {
-      move(row, col);
-      addch((symbol[grid[{col, row}]]));
-    }
+  if (x != -1)
+    mvaddch(y + 1, x, symbol[tile]);
+  else {
+    std::ostringstream out;
+    out << tile;
+    move(0, 0);
+    addstr(out.str().c_str());
   }
-  move(0, 0);
-  std::ostringstream out;
-  out << score;
-  addstr(out.str().c_str());
-  refresh();
 #endif
 }
 
 void day13() {
 #ifdef USECURSES
   initscr();
+  nodelay(stdscr, TRUE);
+  noecho();
+  curs_set(0);
   clear();
+  double frameTime = 10; // milliseconds
 #endif
   auto star1 = 0;
   auto star2 = 0;
@@ -48,7 +49,8 @@ void day13() {
       ++star1;
 
   program.reset();
-  program.freeplay();
+  program.freeplay(); // TODO !!! rename this, it's used elsewhere, should just
+                      // be a "set" for Intcode
   int ballPos = 0;
   int paddlePos = 0;
 
@@ -56,7 +58,7 @@ void day13() {
 
   while (true) {
     auto state = program.run(input);
-    auto out = program.getOutput();
+    out = program.getOutput();
     for (int i = 0; i < out.size();) {
       auto x = out[i++];
       auto y = out[i++];
@@ -71,8 +73,21 @@ void day13() {
     }
     if (state == Intcode::HALT)
       break;
+#ifdef USECURSES
+    auto ch = getch();
+    if (ch == ',')
+      frameTime *= 1.1;
+    if (ch == '.')
+      frameTime /= 1.1;
+    std::this_thread::sleep_for(std::chrono::milliseconds(long(frameTime)));
+    refresh();
+#endif
     input = {sgn(ballPos - paddlePos)};
   }
+
+#ifdef USECURSES
+  endwin();
+#endif
 
   std::cout << "Day 13 star 1 = " << star1 << "\n";
   std::cout << "Day 13 star 2 = " << star2 << "\n";

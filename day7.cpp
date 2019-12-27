@@ -8,18 +8,13 @@
 #include <iostream>
 #include <vector>
 
-using std::cout;
-using std::endl;
-using std::ifstream;
-using std::vector;
-
-auto runPhases(const Intcode &program, vector<int> phase, bool feedback) {
+auto runPhases(const Intcode &program, std::vector<int> phase, bool feedback) {
   long long star = 0;
   do {
-    vector<Intcode> amps(5, program);
+    std::vector<Intcode> amps(5, program);
     for (int i = 0; i < 5; ++i)
       amps[i].enqueueInput({phase[i]});
-    vector<long long> previousOutput({0});
+    std::vector<long long> previousOutput({0});
     Intcode::State state{Intcode::HALT};
     do
       for (int i = 0; i < 5; ++i) {
@@ -33,12 +28,10 @@ auto runPhases(const Intcode &program, vector<int> phase, bool feedback) {
 }
 
 void day7() {
-  ifstream ifile("../day7.txt");
+  std::ifstream ifile("../day7.txt");
   Intcode program(ifile);
   auto star1 = runPhases(program, {0, 1, 2, 3, 4}, false);
   auto star2 = runPhases(program, {5, 6, 7, 8, 9}, true);
-  cout << "Day 7 star 1 = " << star1 << "\n";
-  cout << "Day 7 star 2 = " << star2 << "\n";
+  std::cout << "Day 7 star 1 = " << star1 << "\n";
+  std::cout << "Day 7 star 2 = " << star2 << "\n";
 }
-// Day 7 star 1 = 273814
-// Day 7 star 2 = 34579864

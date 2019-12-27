@@ -1,6 +1,3 @@
-//
-// Created by Chris Hartman on 12/3/19.
-//
 #include <algorithm>
 #include <iostream>
 #include <sstream>

@@ -9,33 +9,29 @@
 #include <utility>
 #include <vector>
 
-using std::pair;
-using std::string;
-using std::vector;
-
 struct CompareByatan2 {
-  bool operator()(pair<int, int> s1, pair<int, int> s2) const {
+  bool operator()(std::pair<int, int> s1, std::pair<int, int> s2) const {
     return atan2(s1.first, s1.second) > atan2(s2.first, s2.second);
   }
 };
 
 void day10() {
   std::ifstream ifile("../day10.txt");
-  string line;
+  std::string line;
 
-  vector<pair<int, int>> asteroids;
+  std::vector<std::pair<int, int>> asteroids;
   for (int row = 0; getline(ifile, line); ++row)
     for (int col = 0; col < line.size(); ++col)
       if (line[col] == '#')
         asteroids.emplace_back(col, row);
 
-  std::map<std::pair<int, int>, vector<int>, CompareByatan2>
+  std::map<std::pair<int, int>, std::vector<int>, CompareByatan2>
       gcdsBySlopeForBestAsteroid;
 
   int bestX = 0, bestY = 0;
   auto star1 = 0;
   for (auto [ax, ay] : asteroids) {
-    std::map<pair<int, int>, vector<int>, CompareByatan2> gcdsBySlope;
+    std::map<std::pair<int, int>, std::vector<int>, CompareByatan2> gcdsBySlope;
     for (auto [bx, by] : asteroids) {
       if (bx == ax && by == ay)
         continue;
@@ -55,7 +51,7 @@ void day10() {
   for (auto &[pos, qOfGs] : gcdsBySlopeForBestAsteroid)
     std::sort(qOfGs.begin(), qOfGs.end(), std::greater<>());
 
-  vector<int> destructionOrder;
+  std::vector<int> destructionOrder;
   while (destructionOrder.size() < 200) {
     for (auto &[pos, qOfGs] : gcdsBySlopeForBestAsteroid) {
       if (qOfGs.empty())

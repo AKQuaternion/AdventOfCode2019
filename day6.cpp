@@ -1,6 +1,3 @@
-//
-// Created by Chris Hartman on 12/5/19.
-//
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -10,7 +7,7 @@
 
 class Graph {
 public:
-  Graph(std::istream &ifile) {
+  explicit Graph(std::istream &ifile) {
     std::string line;
     while (getline(ifile, line)) {
       std::istringstream iline(line);

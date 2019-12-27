@@ -50,8 +50,8 @@ void day25();
 // day 21 Intcode jumping droid
 // day 22 Shuffle cards with lots of modular arithmetic
 // day 23 Intcode 50 networked NICs which can idle, and a NAT
-// day 24
-// day 25
+// day 24 Bugs game of Life with recursive world
+// day 25 Intcode text adventure
 void day10old();
 
 double timesec() {
@@ -62,22 +62,21 @@ double timesec() {
 int main() {
   double time1 = timesec(); // End time (sec)
 
-  //  day1();
-  //  day2();
-  //  day3();
-  //  day4();
-  //  day5();
-  //  day6();
-  //  day7();
-  //  day8();
-  //  day9();
-  //  day10();
-  //  day10old();
-  //  day11();
-  //  day12();
-  //  day13();
-  //  day14();
-  //  day15();
+  //    day1();
+  //    day2();
+  //    day3();
+  //    day4();
+  //    day5();
+  //    day6();
+  //    day7();
+  //    day8();
+  //    day9();
+  //    day10();
+  //    day11();
+  //    day12();
+  //    day13();
+  //    day14();
+  //    day15();
   //  day16();
   //  day17();
   //  day18();
@@ -86,7 +85,8 @@ int main() {
   //  day21();
   //  day22();
   //  day23();
-  day24();
+  //  day24();
+  day25();
   double time2 = timesec();           // End time (sec)
   double elapsedtime = time2 - time1; // Elapsed (sec)
   std::cout << "Time required: " << elapsedtime << " seconds" << std::endl;
@@ -149,3 +149,5 @@ int main() {
 // Day 22 star 2 = 1041334417227
 // Day 23 star 1 = 21160
 // Day 23 star 2 = 14331
+// Day 24 star 1 = 26840049
+// Day 24 star 2 = 1995

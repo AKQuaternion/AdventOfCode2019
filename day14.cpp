@@ -1,7 +1,3 @@
-//
-// Created by Chris Hartman on 12/13/19.
-//
-
 #include <deque>
 #include <fstream>
 #include <iostream>
@@ -11,24 +7,22 @@
 #include <string>
 #include <vector>
 
-using std::map;
-using std::pair;
-using std::string;
-using std::vector;
-using Number = unsigned long long;
+using Number = unsigned long;
 
 struct Ingredient {
   Number amountRequired;
-  string ingredientName;
+  std::string ingredientName;
 };
 
 struct Reaction {
   Number makes;
-  vector<Ingredient> ingredients;
+  std::vector<Ingredient> ingredients;
 };
 
-void topoHelper(const string &name, const map<string, Reaction> &reactions,
-                std::set<string> &visited, std::deque<string> &order) {
+void topoHelper(const std::string &name,
+                const std::map<std::string, Reaction> &reactions,
+                std::set<std::string> &visited,
+                std::deque<std::string> &order) {
   if (name == "ORE")
     return;
   visited.insert(name);
@@ -39,20 +33,21 @@ void topoHelper(const string &name, const map<string, Reaction> &reactions,
   order.push_front(name);
 }
 
-std::deque<string> topoSort(const string &name,
-                            const map<string, Reaction> &reactions) {
-  std::set<string> visited;
-  std::deque<string> order;
+std::deque<std::string>
+topoSort(const std::string &name,
+         const std::map<std::string, Reaction> &reactions) {
+  std::set<std::string> visited;
+  std::deque<std::string> order;
   topoHelper(name, reactions, visited, order);
   return order;
 }
 
-map<string, Reaction> readInput(std::istream &ifile) {
-  map<string, Reaction> reactions;
-  string line;
+std::map<std::string, Reaction> readInput(std::istream &ifile) {
+  std::map<std::string, Reaction> reactions;
+  std::string line;
   while (getline(ifile, line)) {
     Ingredient i{0, ""};
-    vector<Ingredient> ingredients;
+    std::vector<Ingredient> ingredients;
     std::istringstream iline(line);
     bool done = false;
     while (!done) {
@@ -63,7 +58,7 @@ map<string, Reaction> readInput(std::istream &ifile) {
         done = true;
       ingredients.push_back(i);
     }
-    string arrow;
+    std::string arrow;
     iline >> arrow >> i.amountRequired >> i.ingredientName; // "=>" num reagent
     reactions[i.ingredientName] = {i.amountRequired, ingredients};
   }
@@ -99,7 +94,7 @@ void day14() {
   auto chemicalsInOrder = topoSort("FUEL", reactions);
 
   auto oreNeededForFuel = [&](Number fuel) {
-    map<string, Number> amountNeeded{{"FUEL", fuel}};
+    std::map<std::string, Number> amountNeeded{{"FUEL", fuel}};
     for (const auto &chemical : chemicalsInOrder) {
       const auto &[amountReactionMakes, ingredients] = reactions[chemical];
       for (const auto &[reactionRequires, name] : ingredients) {

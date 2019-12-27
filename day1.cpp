@@ -1,6 +1,3 @@
-//
-// Created by Chris Hartman on 12/1/19.
-//
 #include <fstream>
 #include <iostream>
 
@@ -21,5 +18,3 @@ void day1() {
   std::cout << "Day 1 star 1 = " << star1 << "\n";
   std::cout << "Day 1 star 2 = " << star2 << "\n";
 }
-// Day 1 star 1 = 3372756
-// Day 1 star 2 = 5056279
