@@ -1,6 +1,6 @@
-#include "/usr/local/include/gmp.h"
-#include "/usr/local/include/gmpxx.h"
 #include <fstream>
+#include <gmp.h>
+#include <gmpxx.h>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -88,7 +88,32 @@ void day22() {
   std::cout << "Day 22 star 1 = " << (2019 * m1 + a1) % numCardsPart1
             << std::endl;
 
-  // For part 2, we need to find out what card ends
+  // For part 2, we need to find out what card ends in position 2020. If
+  // we do the shuffles *backwards*, we can think of this as "where did 2020
+  // go?." So we calculate the inverses of the three shuffle operations.
+  // Cut is just using i instead of -i
+  // Dealing into a new stack is already self inverse
+  // Dealing to every nth card is slightly harder, we must find the inverse of
+  // n (mod the number of cards.) This can be done without any "hard" math
+  // by just cheking if i*(number of cards)+1 is divisible by n, for 0 <i < n,
+  // or one can use the extended euclidean algorithm. (This is feasible for
+  // the numbers in our shuffle, as they are all smaller than 100.) In the code
+  // for inverse(n) above, I use the GNU MP package, which is necessary for the
+  // large numbers involved in this problem anyway, which knows how to
+  // use the extended euclidean algorithm.
+  //
+  // Finally, we have an equation,the card at position p came from mul*p + add
+  // iterating "p = m*p+a" n times gives us
+  // m^n * p + (m^(n-1) + m^(n-2) + ... + m + 1)*a
+  // = m^n * p + ((m^n-1)/(m-1))*a
+  // or m^n * p + (m^n-1) * inverse(m-1) * a
+  //
+  // If you don't understand the derivation above (which uses the sum of
+  // a geometric series) you can also iterate the equation twice to get e2
+  // iterating e2 twice to get e4, etc. and then applying e1, e2, etc. if
+  // the corresponding bit of "number of times to iterate" is set. (For example,
+  // if #times = 9, you would apply e8 and e1.)
+
   Number mul = 1;
   Number add = 0;
   for (auto t = shuffle.rbegin(); t != shuffle.rend(); ++t) {
@@ -107,10 +132,7 @@ void day22() {
       break;
     }
   }
-  // so now the card at position p goes to mul*p + add
-  // iterating p = m*p+a n times gives us
-  // m^n * p + (m^(n-1) + m^(n-2) + ... + m + 1)*a
-  // = m^n * p + ((m^n-1)/(m-1))*a
+
   Number mn;
   mpz_powm_ui(mn.get_mpz_t(), mul.get_mpz_t(), numTimes, numCards.get_mpz_t());
   Number left = mn * 2020;

@@ -54,7 +54,7 @@ void day25() {
     getline(std::cin, myIn);
     vector<long long> input;
     copy(myIn.begin(), myIn.end(), back_inserter(input));
-    input.push_back(('\n');
+    input.push_back('\n');
     i.run(input);
   }
   //  string line;
